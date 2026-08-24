@@ -1,8 +1,0 @@
-# server
-/server/.venv
-/server/.venv/__pycache__
-/server/.env
-/server/data
-
-# front
-/front/node_module
