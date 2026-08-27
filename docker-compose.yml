@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./server
+    container_name: final_project_api
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./server:/app
+
+    restart: always
+
+  frontend:
+    build:
+      context: ./front
+    container_name: final_project_react
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+
+    depends_on:
+      - backend
+
+    restart: always
