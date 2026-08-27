@@ -1,0 +1,10 @@
+fastapi
+uvicorn 
+sqlalchemy
+pymysql
+pydantic
+python-dotenv
+# security
+passlib
+bcrypt == 4.0.1
+python-jose
