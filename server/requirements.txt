@@ -8,4 +8,9 @@ python-dotenv
 passlib
 bcrypt == 4.0.1
 python-jose
-pandas
+pandas == 3.0.5
+scikit-learn == 1.9.0
+numpy == 2.5.1
+statsmodels == 0.15.0
+scipy == 1.18.0
+joblib == 1.5.3
