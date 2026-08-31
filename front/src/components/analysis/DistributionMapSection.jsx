@@ -7,7 +7,7 @@ import Checkbox from "../common/Checkbox.jsx";
 import Tag from "../common/Tag.jsx";
 import Button from "../common/Button.jsx";
 import Card from "../common/Card.jsx";
-import "./DistributionMapSection.css";
+import "../../styles/DistributionMapSection.css";
 
 // "지도로 분포 확인" 클릭 시 별도 라우팅 페이지로 이동하지 않고,
 // AiAnalysis 페이지 내에서 반응형으로 확장되어 보여지는 지도 섹션

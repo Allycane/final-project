@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
+import { faLock } from "@fortawesome/free-solid-svg-icons";
 import { login as loginRequest } from "../api/authApi.js";
 import { useAuth } from "../hooks/useAuth.js";
 import TextField from "../components/common/TextField.jsx";
@@ -57,7 +60,7 @@ function Login() {
               id="email"
               name="email"
               type="email"
-              icon="✉"
+              icon={<FontAwesomeIcon icon={faEnvelope} />}
               placeholder="이메일을 입력해주세요"
               value={form.email}
               onChange={handleChange}
@@ -68,7 +71,7 @@ function Login() {
               id="password"
               name="password"
               type="password"
-              icon="🔒"
+              icon={<FontAwesomeIcon icon={faLock} />}
               placeholder="비밀번호를 입력해주세요"
               value={form.password}
               onChange={handleChange}

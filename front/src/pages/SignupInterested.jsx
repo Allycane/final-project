@@ -11,7 +11,7 @@ import Select from "../components/common/Select.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Tag from "../components/common/Tag.jsx";
-import "./Signup.css";
+import "../styles/Signup.css";
 
 function SignupInterested() {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ function SignupInterested() {
 
   const categoryName = (code) => allCategoryOptions.find((c) => c.code === code)?.name ?? code;
   const regionName = (code) => mockRegions.find((r) => r.code === code)?.name ?? code;
+  const storeTypeName = (code) => mockStoreTypes.find((s) => s.code === code)?.name ?? code;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -100,6 +101,16 @@ function SignupInterested() {
                   {regionName(code)}
                 </Tag>
               ))}
+            </div>
+
+            <p className="signup-interest__summary-label">매장 형태</p>
+            <div className="signup-interest__tag-list">
+              {!storeType && (
+                <span style={{ fontSize: 12, color: "var(--color-text-muted-2)" }}>
+                  선택된 매장 형태가 없습니다.
+                </span>
+              )}
+              {storeType && <Tag>{storeTypeName(storeType)}</Tag>}
             </div>
           </aside>
 

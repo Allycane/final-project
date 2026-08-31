@@ -1,24 +1,36 @@
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFaceSmile,
+  faChartSimple,
+  faArrowTrendUp,
+  faShop,
+  faMagnifyingGlassLocation,
+  faAnglesUp,
+  faCircleHalfStroke,
+  faLightbulb,
+  faClipboardList,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
 import { mockUser } from "../mocks/users.js";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Tag from "../components/common/Tag.jsx";
-import "./AiChatInfo.css";
+import "../styles/AiChatInfo.css";
 
 const ANALYSIS_BASIS = [
   {
-    icon: "📊",
+    icon: faShop,
     title: "관심 업종 데이터",
     description: "선택하신 관심 업종의 시장 규모, 상권, 경쟁 현황 등 다양한 데이터를 분석합니다.",
   },
   {
-    icon: "🔍",
+    icon: faMagnifyingGlassLocation,
     title: "관심 지역 데이터",
     description: "선택하신 지역의 상권 특성, 유동 인구, 매출 등 지역 기반 데이터로 분석합니다.",
   },
   {
-    icon: "🧭",
+    icon: faAnglesUp,
     title: "창업 환경 분석",
     description: "최신 시장 트렌드와 소비자 패턴을 반영하여 창업 환경을 종합적으로 분석합니다.",
   },
@@ -26,17 +38,17 @@ const ANALYSIS_BASIS = [
 
 const CONSULTING_FEATURES = [
   {
-    icon: "◐",
+    icon: faCircleHalfStroke,
     title: "시장성 분석",
     description: "선택한 업종과 지역의 시장 규모, 성장 가능성, 경쟁 정도 등을 분석하여 시장성 진입 전략을 제안합니다.",
   },
   {
-    icon: "💡",
+    icon: faLightbulb,
     title: "창업 아이디어 제안",
     description: "데이터 기반의 창의적인 아이디어와 차별화 포인트를 제안하여 성공 가능성을 높여드립니다.",
   },
   {
-    icon: "📋",
+    icon: faClipboardList,
     title: "실행 전략 가이드",
     description: "입지 선정, 마케팅 전략, 운영 계획 등 창업 실행에 필요한 구체적인 전략과 가이드를 제공합니다.",
   },
@@ -60,9 +72,15 @@ function AiChatInfo() {
             </p>
           </div>
           <div className="chat-info__hero-icons" aria-hidden="true">
-            <span className="chat-info__hero-bubble">🙂</span>
-            <span className="chat-info__hero-icon">📊</span>
-            <span className="chat-info__hero-icon">📈</span>
+            <span className="chat-info__hero-bubble">
+              <FontAwesomeIcon icon={faFaceSmile} />
+            </span>
+            <span className="chat-info__hero-icon">
+              <FontAwesomeIcon icon={faChartSimple} />
+            </span>
+            <span className="chat-info__hero-icon">
+              <FontAwesomeIcon icon={faArrowTrendUp} />
+            </span>
           </div>
         </div>
       </section>
@@ -114,7 +132,9 @@ function AiChatInfo() {
           <div className="chat-info__card-grid">
             {ANALYSIS_BASIS.map((item) => (
               <Card className="chat-info__feature-card" key={item.title}>
-                <span className="chat-info__feature-icon">{item.icon}</span>
+                <span className="chat-info__feature-icon">
+                  <FontAwesomeIcon icon={item.icon} />
+                </span>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </Card>
@@ -129,7 +149,9 @@ function AiChatInfo() {
           <div className="chat-info__card-grid">
             {CONSULTING_FEATURES.map((item) => (
               <Card className="chat-info__feature-card" key={item.title}>
-                <span className="chat-info__feature-icon">{item.icon}</span>
+                <span className="chat-info__feature-icon">
+                  <FontAwesomeIcon icon={item.icon} />
+                </span>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </Card>

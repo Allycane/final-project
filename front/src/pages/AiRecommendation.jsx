@@ -1,4 +1,13 @@
 import { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faLocationDot,
+  faStore,
+  faUtensils,
+  faMagnifyingGlass,
+  faChartLine,
+  faLightbulb,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   getRegions,
   getCategoryGroups,
@@ -9,7 +18,7 @@ import MultiSelectDropdown from "../components/common/MultiSelectDropdown.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Badge from "../components/common/Badge.jsx";
-import "./AiRecommendation.css";
+import "../styles/AiRecommendation.css";
 
 const BADGE_VARIANT = {
   성장: "good",
@@ -55,12 +64,25 @@ function AiRecommendation() {
     getCategoryGroups().then(setCategoryGroups);
   }, []);
 
-  const subOptions = categoryGroups.flatMap((group) => group.children);
+  const subOptions = categoryGroups
+    .filter((group) => selectedMajors.includes(group.code))
+    .flatMap((group) => group.children);
 
   const toggleMajor = (code) => {
     setSelectedMajors((prev) =>
       prev.includes(code) ? prev.filter((item) => item !== code) : [...prev, code]
     );
+    setSelectedSubs((prev) => {
+      const nextMajors = selectedMajors.includes(code)
+        ? selectedMajors.filter((item) => item !== code)
+        : [...selectedMajors, code];
+      const validCodes = new Set(
+        categoryGroups
+          .filter((group) => nextMajors.includes(group.code))
+          .flatMap((group) => group.children.map((child) => child.code))
+      );
+      return prev.filter((item) => validCodes.has(item));
+    });
   };
 
   const toggleSub = (code) => {
@@ -94,7 +116,7 @@ function AiRecommendation() {
         <Select
           label="지역 선택"
           id="region"
-          icon="📍"
+          icon={<FontAwesomeIcon icon={faLocationDot} />}
           placeholder="지역을 선택해주세요"
           options={regions}
           value={region}
@@ -103,7 +125,7 @@ function AiRecommendation() {
 
         <MultiSelectDropdown
           label="업종 카테고리 (복수 선택)"
-          icon="🏷"
+          icon={<FontAwesomeIcon icon={faStore} />}
           placeholder="업종 카테고리를 선택해주세요"
           options={categoryGroups}
           selected={selectedMajors}
@@ -112,7 +134,7 @@ function AiRecommendation() {
 
         <MultiSelectDropdown
           label="하위 카테고리 (복수 선택)"
-          icon="🍴"
+          icon={<FontAwesomeIcon icon={faUtensils} />}
           placeholder="하위 카테고리를 선택해주세요"
           options={subOptions}
           selected={selectedSubs}
@@ -120,7 +142,7 @@ function AiRecommendation() {
         />
 
         <Button onClick={handleSearch} disabled={isSearching} className="ai-recommendation__search">
-          🔍 {isSearching ? "검색 중..." : "검색하기"}
+          <FontAwesomeIcon icon={faMagnifyingGlass} /> {isSearching ? "검색 중..." : "검색하기"}
         </Button>
       </Card>
 
@@ -141,13 +163,13 @@ function AiRecommendation() {
             <div className="ai-recommendation__grid">
               <ResultPanel
                 variant="good"
-                icon="📈"
+                icon={<FontAwesomeIcon icon={faChartLine} />}
                 title="추천 업종"
                 items={[result.recommended]}
               />
               <ResultPanel
                 variant="bad"
-                icon="📉"
+                icon={<FontAwesomeIcon icon={faChartLine} />}
                 title="비추천 업종"
                 items={result.notRecommended}
               />
@@ -155,7 +177,7 @@ function AiRecommendation() {
 
             <ResultPanel
               variant="info"
-              icon="●"
+              icon={<FontAwesomeIcon icon={faLightbulb} />}
               title="선택 안 했지만 참고할 업종"
               items={result.reference}
             />

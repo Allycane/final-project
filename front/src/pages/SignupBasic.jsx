@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
+import { faUser, faPhone, faLock } from "@fortawesome/free-solid-svg-icons";
 import { signupBasic } from "../api/authApi.js";
 import { SIGNUP_STEPS } from "../constants/signup.js";
 import StepIndicator from "../components/common/StepIndicator.jsx";
 import TextField from "../components/common/TextField.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
-import "./Signup.css";
+import "../styles/Signup.css";
 import "../styles/Auth.css";
 
 function SignupBasic() {
@@ -69,7 +72,7 @@ function SignupBasic() {
                 label="이름"
                 id="name"
                 name="name"
-                icon="👤"
+                icon={<FontAwesomeIcon icon={faUser} />}
                 placeholder="이름을 입력해주세요"
                 value={form.name}
                 onChange={handleChange}
@@ -80,7 +83,7 @@ function SignupBasic() {
                 id="phone"
                 name="phone"
                 type="tel"
-                icon="📞"
+                icon={<FontAwesomeIcon icon={faPhone} />}
                 placeholder="010-1234-5678"
                 value={form.phone}
                 onChange={handleChange}
@@ -93,7 +96,7 @@ function SignupBasic() {
               id="email"
               name="email"
               type="email"
-              icon="✉"
+              icon={<FontAwesomeIcon icon={faEnvelope} />}
               placeholder="이메일을 입력해주세요"
               value={form.email}
               onChange={handleChange}
@@ -104,7 +107,7 @@ function SignupBasic() {
               id="password"
               name="password"
               type="password"
-              icon="🔒"
+              icon={<FontAwesomeIcon icon={faLock} />}
               placeholder="비밀번호를 입력해주세요"
               value={form.password}
               onChange={handleChange}
@@ -115,7 +118,7 @@ function SignupBasic() {
               id="passwordConfirm"
               name="passwordConfirm"
               type="password"
-              icon="🔒"
+              icon={<FontAwesomeIcon icon={faLock} />}
               placeholder="비밀번호를 다시 입력해주세요"
               value={form.passwordConfirm}
               onChange={handleChange}

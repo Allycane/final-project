@@ -1,26 +1,33 @@
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBrain,
+  faChartLine,
+  faLocationDot,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
-import "./Home.css";
+import "../styles/Home.css";
 
 const FEATURES = [
   {
-    icon: "📊",
+    icon: faBrain,
     title: "실제 데이터 기반 분석",
     description: "공공 데이터와 상권 데이터를 AI가 분석합니다.",
   },
   {
-    icon: "🎯",
+    icon: faChartLine,
     title: "정확한 업종 추천",
     description: "성공 가능성이 높은 업종을 추천해드립니다.",
   },
   {
-    icon: "📍",
+    icon: faLocationDot,
     title: "지역 맞춤 분석",
     description: "지역별 상권과 트렌드를 반영합니다.",
   },
   {
-    icon: "✅",
+    icon: faUser,
     title: "누구나 쉽게 활용",
     description: "복잡한 데이터를 쉽게 이해하고 활용할 수 있습니다.",
   },
@@ -61,7 +68,9 @@ function Home() {
         <div className="home__feature-grid">
           {FEATURES.map((feature) => (
             <Card key={feature.title} className="home__feature-card">
-              <div className="home__feature-icon">{feature.icon}</div>
+              <div className="home__feature-icon">
+                <FontAwesomeIcon icon={feature.icon} />
+              </div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </Card>
