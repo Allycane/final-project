@@ -34,7 +34,8 @@ button {
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 /* ---- Card ---- */
@@ -137,7 +138,8 @@ button {
   position: relative;
 }
 
-.text-field-wrap.has-icon .text-field {
+.text-field-wrap.has-icon .text-field,
+.text-field-wrap.has-icon .select-field {
   padding-left: 40px;
 }
 
@@ -237,6 +239,8 @@ button {
   font-size: 12px;
   font-weight: 700;
   border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-good {

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { getSalesAnalysis } from "../api/analysisApi.js";
 import { mockRegions } from "../mocks/regions.js";
-import { mockCategoryGroups, mockSubCategoriesByParent } from "../mocks/categories.js";
+import { mockCategoryGroups } from "../mocks/categories.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
 import Button from "../components/common/Button.jsx";
@@ -9,7 +11,7 @@ import Card from "../components/common/Card.jsx";
 import StatTile from "../components/common/StatTile.jsx";
 import SalesLineChart from "../components/analysis/SalesLineChart.jsx";
 import DistributionMapSection from "../components/analysis/DistributionMapSection.jsx";
-import "./AiAnalysis.css";
+import "../styles/AiAnalysis.css";
 
 function AiAnalysis() {
   const [region, setRegion] = useState("");
@@ -20,10 +22,8 @@ function AiAnalysis() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
 
-  const minorOptions = mockSubCategoriesByParent.korean.map((name) => ({
-    code: name,
-    name,
-  }));
+  const minorOptions =
+    mockCategoryGroups.find((group) => group.code === majorCategory)?.children ?? [];
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -70,7 +70,10 @@ function AiAnalysis() {
             placeholder="대분류를 선택하세요"
             options={mockCategoryGroups}
             value={majorCategory}
-            onChange={(e) => setMajorCategory(e.target.value)}
+            onChange={(e) => {
+              setMajorCategory(e.target.value);
+              setMinorCategory("");
+            }}
           />
           <Select
             label="업종 소분류"
@@ -135,7 +138,9 @@ function AiAnalysis() {
         </Card>
 
         <Card className="ai-analysis__insight">
-          <div className="ai-analysis__insight-icon">✦</div>
+          <div className="ai-analysis__insight-icon">
+            <FontAwesomeIcon icon={faWandMagicSparkles} />
+          </div>
           <div>
             <h3>AI 종합 인사이트</h3>
             <p>

@@ -1,4 +1,4 @@
-import "./KakaoMap.css";
+import "../../styles/KakaoMap.css";
 
 // TODO: 카카오맵 API 연동 필요
 // 1) front/index.html <head>에 다음 스크립트 추가
