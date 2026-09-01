@@ -17,6 +17,8 @@ services:
   frontend:
     build:
       context: ./front
+    env_file:
+      - ./front/.env
     container_name: final_project_react
 
     ports:
