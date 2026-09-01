@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-function MultiSelectDropdown({ label, icon, options, selected, onToggle, placeholder }) {
+function MultiSelectDropdown({ label, icon, options, selected, onToggle, placeholder, single = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -14,7 +14,16 @@ function MultiSelectDropdown({ label, icon, options, selected, onToggle, placeho
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const summary = selected.length > 0 ? `${selected.length}개 선택됨` : placeholder;
+  const handleOptionClick = (code) => {
+    onToggle(code);
+    if (single) setIsOpen(false);
+  };
+
+  const summary = single
+    ? options.find((option) => option.code === selected[0])?.name ?? placeholder
+    : selected.length > 0
+    ? `${selected.length}개 선택됨`
+    : placeholder;
 
   return (
     <div className="field multi-select" ref={rootRef}>
@@ -36,9 +45,9 @@ function MultiSelectDropdown({ label, icon, options, selected, onToggle, placeho
           {options.map((option) => (
             <label className="multi-select__option" key={option.code}>
               <input
-                type="checkbox"
+                type={single ? "radio" : "checkbox"}
                 checked={selected.includes(option.code)}
-                onChange={() => onToggle(option.code)}
+                onChange={() => handleOptionClick(option.code)}
               />
               {option.name}
             </label>

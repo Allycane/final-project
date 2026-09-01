@@ -1,9 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFaceSmile,
-  faChartSimple,
-  faArrowTrendUp,
   faShop,
   faMagnifyingGlassLocation,
   faAnglesUp,
@@ -72,17 +69,6 @@ function AiChatInfo() {
               <br />
               창업 컨설팅을 제공합니다.
             </p>
-          </div>
-          <div className="chat-info__hero-icons" aria-hidden="true">
-            <span className="chat-info__hero-bubble">
-              <FontAwesomeIcon icon={faFaceSmile} />
-            </span>
-            <span className="chat-info__hero-icon">
-              <FontAwesomeIcon icon={faChartSimple} />
-            </span>
-            <span className="chat-info__hero-icon">
-              <FontAwesomeIcon icon={faArrowTrendUp} />
-            </span>
           </div>
         </div>
       </section>

@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLocationDot,
   faStore,
-  faUtensils,
   faMagnifyingGlass,
   faChartLine,
   faLightbulb,
@@ -13,7 +12,6 @@ import {
   getCategoryGroups,
   getRecommendation,
 } from "../api/recommendationApi.js";
-import Select from "../components/common/Select.jsx";
 import MultiSelectDropdown from "../components/common/MultiSelectDropdown.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
@@ -113,14 +111,14 @@ function AiRecommendation() {
       </p>
 
       <Card className="ai-recommendation__filter">
-        <Select
+        <MultiSelectDropdown
           label="지역 선택"
-          id="region"
           icon={<FontAwesomeIcon icon={faLocationDot} />}
           placeholder="지역을 선택해주세요"
           options={regions}
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
+          selected={region ? [region] : []}
+          onToggle={setRegion}
+          single
         />
 
         <MultiSelectDropdown
@@ -134,7 +132,6 @@ function AiRecommendation() {
 
         <MultiSelectDropdown
           label="하위 카테고리 (복수 선택)"
-          icon={<FontAwesomeIcon icon={faUtensils} />}
           placeholder="하위 카테고리를 선택해주세요"
           options={subOptions}
           selected={selectedSubs}
