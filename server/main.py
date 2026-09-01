@@ -1,9 +1,8 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from database.connection import Base, engine
-
+from router.auth import router as auth_router
 
 # from routes.auth import router as auth_router
 # from routes.users import user_router
@@ -26,7 +25,7 @@ app.add_middleware(
 )
 
 # app.include_router(auth_router, prefix="/api/auth")
-# app.include_router(user_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
