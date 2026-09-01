@@ -56,8 +56,10 @@ const CONSULTING_FEATURES = [
 
 function AiChatInfo() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const interests = user?.interests ?? mockUser.interests;
+
+  const goToInterestEdit = () => navigate(isLoggedIn ? "/mypage" : "/login");
 
   return (
     <div className="chat-info">
@@ -98,11 +100,7 @@ function AiChatInfo() {
                   <Tag key={name}>{name}</Tag>
                 ))}
               </div>
-              <button
-                type="button"
-                className="chat-info__edit-link"
-                onClick={() => navigate("/")} // 추후 회원정보 수정 페이지 제작 시 라우팅
-              >
+              <button type="button" className="chat-info__edit-link" onClick={goToInterestEdit}>
                 관심 업종 수정하기
               </button>
             </div>
@@ -114,11 +112,7 @@ function AiChatInfo() {
                   <Tag key={name}>{name}</Tag>
                 ))}
               </div>
-              <button
-                type="button"
-                className="chat-info__edit-link"
-                onClick={() => navigate("/")} // 추후 회원정보 수정 페이지 제작 시 라우팅
-              >
+              <button type="button" className="chat-info__edit-link" onClick={goToInterestEdit}>
                 관심 지역 수정하기
               </button>
             </div>
