@@ -3,7 +3,6 @@ import { getDistribution } from "../../api/mapApi.js";
 import { mockCategoryGroups } from "../../mocks/categories.js";
 import KakaoMap from "../map/KakaoMap.jsx";
 import Select from "../common/Select.jsx";
-import Checkbox from "../common/Checkbox.jsx";
 import Tag from "../common/Tag.jsx";
 import Button from "../common/Button.jsx";
 import Card from "../common/Card.jsx";
@@ -14,6 +13,7 @@ import "../../styles/DistributionMapSection.css";
 function DistributionMapSection() {
   const [majorCategory, setMajorCategory] = useState(mockCategoryGroups[0]?.code ?? "");
   const [selectedSub, setSelectedSub] = useState([]);
+  const [pendingSub, setPendingSub] = useState("");
   const [mapData, setMapData] = useState(null);
 
   const subOptions = mockCategoryGroups.find((g) => g.code === majorCategory)?.children ?? [];
@@ -26,6 +26,12 @@ function DistributionMapSection() {
     setSelectedSub((prev) =>
       prev.includes(code) ? prev.filter((item) => item !== code) : [...prev, code]
     );
+  };
+
+  const addSub = () => {
+    if (!pendingSub) return;
+    setSelectedSub((prev) => (prev.includes(pendingSub) ? prev : [...prev, pendingSub]));
+    setPendingSub("");
   };
 
   const subName = (code) => subOptions.find((item) => item.code === code)?.name ?? code;
@@ -54,23 +60,23 @@ function DistributionMapSection() {
             onChange={(e) => {
               setMajorCategory(e.target.value);
               setSelectedSub([]);
+              setPendingSub("");
             }}
           />
 
           <div className="field">
-            <span className="field-label">
-              세부 업종 선택 <span className="distribution-map__hint">(체크박스)</span>
-            </span>
-            <div className="distribution-map__checkbox-list">
-              {subOptions.map((option) => (
-                <Checkbox
-                  key={option.code}
-                  id={`distribution-sub-${option.code}`}
-                  label={option.name}
-                  checked={selectedSub.includes(option.code)}
-                  onChange={() => toggleSub(option.code)}
-                />
-              ))}
+            <span className="field-label">세부 업종 선택</span>
+            <div className="distribution-map__sub-picker">
+              <Select
+                id="distribution-subCategory"
+                placeholder="세부 업종을 선택하세요"
+                options={subOptions}
+                value={pendingSub}
+                onChange={(e) => setPendingSub(e.target.value)}
+              />
+              <Button onClick={addSub} disabled={!pendingSub}>
+                선택
+              </Button>
             </div>
           </div>
 

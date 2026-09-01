@@ -4,13 +4,6 @@
   padding-bottom: 32px;
 }
 
-.chat-info__hero-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
 .chat-info__hero-inner h1 {
   margin: 0 0 8px;
 }
@@ -18,36 +11,6 @@
 .chat-info__hero-inner p {
   margin: 0;
   color: var(--color-text-muted-2);
-}
-
-.chat-info__hero-icons {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.chat-info__hero-bubble {
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-}
-
-.chat-info__hero-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
 }
 
 .chat-info__body {
@@ -156,11 +119,6 @@
 }
 
 @media (max-width: 900px) {
-  .chat-info__hero-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .chat-info__interests-grid,
   .chat-info__card-grid {
     grid-template-columns: 1fr;
