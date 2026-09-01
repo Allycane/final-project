@@ -12,8 +12,10 @@ import "../styles/Chat.css";
 
 function AiChatMain() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const interests = user?.interests ?? mockUser.interests;
+
+  const goToInfoEdit = () => navigate(isLoggedIn ? "/mypage" : "/login");
 
   const [messages, setMessages] = useState(mockInitialMessages);
   const [input, setInput] = useState("");
@@ -67,11 +69,7 @@ function AiChatMain() {
             ))}
           </div>
 
-          <Button
-            variant="outline"
-            className="chat-profile__edit"
-            onClick={() => navigate("/")} // 추후 회원정보 수정 페이지 제작 시 라우팅
-          >
+          <Button variant="outline" className="chat-profile__edit" onClick={goToInfoEdit}>
             정보 수정하기 ↗
           </Button>
         </Card>
