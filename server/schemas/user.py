@@ -45,7 +45,7 @@ class UpdateProfileRequest(BaseModel):
     password: Optional[str] = None
     categories: Optional[list[str]] = None
     regions: Optional[list[str]] = None
-    store_type: Optional[str] = None
+    store_types: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str

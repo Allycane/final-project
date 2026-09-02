@@ -56,7 +56,7 @@ def signup_interests(payload: SignupInterestsRequest, db: Session = Depends(get_
         password_hash=hash_password(payload.password),
         name=payload.name,
         phone=payload.phone,
-        store_type=payload.storeType,
+        store_types=payload.storeType,
         categories=payload.categories,
         regions=payload.regions,
     )
@@ -108,8 +108,8 @@ def update_me(
         current_user.categories = payload.categories
     if payload.regions is not None:
         current_user.regions = payload.regions
-    if payload.store_type is not None:
-        current_user.store_type = payload.store_type
+    if payload.store_types is not None:
+        current_user.store_types = payload.store_types
 
     db.commit()
     db.refresh(current_user)

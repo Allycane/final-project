@@ -22,7 +22,8 @@ function SignupInterested() {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRegions, setSelectedRegions] = useState([]);
   const [regionToAdd, setRegionToAdd] = useState("");
-  const [storeType, setStoreType] = useState("");
+  const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
+  const [storeTypeToAdd, setStoreTypeToAdd] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const allCategoryOptions = mockCategoryGroups.flatMap((group) => group.children);
@@ -44,6 +45,17 @@ function SignupInterested() {
     setSelectedRegions((prev) => prev.filter((item) => item !== code));
   };
 
+  const addStoreType = () => {
+    if (storeTypeToAdd && !selectedStoreTypes.includes(storeTypeToAdd)) {
+      setSelectedStoreTypes((prev) => [...prev, storeTypeToAdd]);
+    }
+    setStoreTypeToAdd("");
+  };
+
+  const removeStoreType = (code) => {
+    setSelectedStoreTypes((prev) => prev.filter((item) => item !== code));
+  };
+
   const categoryName = (code) => allCategoryOptions.find((c) => c.code === code)?.name ?? code;
   const regionName = (code) => mockRegions.find((r) => r.code === code)?.name ?? code;
   const storeTypeName = (code) => mockStoreTypes.find((s) => s.code === code)?.name ?? code;
@@ -55,7 +67,7 @@ function SignupInterested() {
         ...basicInfo,
         categories: selectedCategories.map(categoryName),
         regions: selectedRegions.map(regionName),
-        storeType,
+        storeType: selectedStoreTypes.length > 0 ? storeTypeName(selectedStoreTypes[0]) : null,
       };
       const user = await signupInterests(payload);
       login(user);
@@ -73,8 +85,6 @@ function SignupInterested() {
       <Card className="signup-page__panel">
         <div className="signup-interest__grid">
           <aside className="signup-interest__summary">
-            <h3>{basicInfo.name ? `${basicInfo.name}님의 정보` : "나의 정보"}</h3>
-
             <p className="signup-interest__summary-label">관심 업종</p>
             <div className="signup-interest__tag-list">
               {selectedCategories.length === 0 && (
@@ -105,12 +115,16 @@ function SignupInterested() {
 
             <p className="signup-interest__summary-label">매장 형태</p>
             <div className="signup-interest__tag-list">
-              {!storeType && (
+              {selectedStoreTypes.length === 0 && (
                 <span style={{ fontSize: 12, color: "var(--color-text-muted-2)" }}>
                   선택된 매장 형태가 없습니다.
                 </span>
               )}
-              {storeType && <Tag>{storeTypeName(storeType)}</Tag>}
+              {selectedStoreTypes.map((code) => (
+                <Tag key={code} onRemove={() => removeStoreType(code)}>
+                  {storeTypeName(code)}
+                </Tag>
+              ))}
             </div>
           </aside>
 
@@ -154,13 +168,18 @@ function SignupInterested() {
 
             <section className="signup-interest__section">
               <h4>3. 매장 형태</h4>
-              <Select
-                id="storeType"
-                placeholder="매장 형태를 선택해주세요"
-                options={mockStoreTypes}
-                value={storeType}
-                onChange={(e) => setStoreType(e.target.value)}
-              />
+              <div className="signup-interest__region-row">
+                <Select
+                  id="storeTypeToAdd"
+                  placeholder="매장 형태를 선택해주세요"
+                  options={mockStoreTypes}
+                  value={storeTypeToAdd}
+                  onChange={(e) => setStoreTypeToAdd(e.target.value)}
+                />
+                <Button variant="outline" onClick={addStoreType}>
+                  추가
+                </Button>
+              </div>
             </section>
 
             <div className="signup-interest__actions">
