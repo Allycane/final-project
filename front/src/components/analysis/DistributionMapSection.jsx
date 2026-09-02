@@ -17,6 +17,7 @@ function DistributionMapSection() {
   const [mapData, setMapData] = useState(null);
 
   const subOptions = mockCategoryGroups.find((g) => g.code === majorCategory)?.children ?? [];
+  const allSubOptions = mockCategoryGroups.flatMap((g) => g.children);
 
   useEffect(() => {
     getDistribution({}).then(setMapData);
@@ -34,7 +35,7 @@ function DistributionMapSection() {
     setPendingSub("");
   };
 
-  const subName = (code) => subOptions.find((item) => item.code === code)?.name ?? code;
+  const subName = (code) => allSubOptions.find((item) => item.code === code)?.name ?? code;
 
   const handleShowDistribution = async () => {
     const data = await getDistribution({ majorCategory, subCategories: selectedSub });
@@ -59,7 +60,6 @@ function DistributionMapSection() {
             value={majorCategory}
             onChange={(e) => {
               setMajorCategory(e.target.value);
-              setSelectedSub([]);
               setPendingSub("");
             }}
           />

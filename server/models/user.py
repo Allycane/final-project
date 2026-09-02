@@ -14,7 +14,7 @@ class User(Base):
    password_hash = Column(String(255), nullable=False)
    name = Column(String(100), nullable=False)
    phone = Column(String(20))
-   store_type = Column(String(50))
+   store_types = Column(String(50))
    categories = Column(JSON, default=list, nullable=False)
    regions = Column(JSON, default=list, nullable=False)
    created_at = Column(DateTime, default=datetime.utcnow)
