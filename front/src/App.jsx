@@ -23,7 +23,11 @@ function App() {
 				<Route path="/ai-analysis" element={<AiAnalysis />} />
 				<Route path="/ai-chat" element={<AiChatInfo />} />
 				<Route path="/ai-chat/main" element={<AiChatMain />} />
-				<Route path="/mypage" element={<Mypage />} />
+				<Route element={<ProtectedRoute />}>
+					<Route path="/mypage" element={<Mypage />} />
+					{/* 로그인이나 가입한 사람이 아니면 접근 못하도록 막음 */}
+				</Route>
+				{/* <Route path="/mypage" element={<Mypage />} /> */}
 			</Route>
 		</Routes>
 	);

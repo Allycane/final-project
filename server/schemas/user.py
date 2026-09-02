@@ -16,7 +16,8 @@ class SignupInterestsRequest(BaseModel):
     phone: Optional[str] = None
     categories: list[str] = []
     regions: list[str] = []
-    storeType: Optional[str] = None
+    # storeType: Optional[str] = None  
+    storeTypes: list[str] = []
 
 
 class LoginRequest(BaseModel):
@@ -30,14 +31,13 @@ class UserResponse(BaseModel):
     email: str
     name: str
     phone: Optional[str] = None
-    store_type: Optional[str] = None
+    store_types: list[str] = []
     categories: list[str] = []
     regions: list[str] = []
 
     class Config:
         from_attributes = True
 
-# 
 class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -45,7 +45,7 @@ class UpdateProfileRequest(BaseModel):
     password: Optional[str] = None
     categories: Optional[list[str]] = None
     regions: Optional[list[str]] = None
-    store_type: Optional[str] = None
+    store_types: Optional[list[str]] = None
 
 class TokenResponse(BaseModel):
     access_token: str

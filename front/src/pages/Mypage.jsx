@@ -30,11 +30,9 @@ const LIMITS = { category: 10, region: 5, storeType: 5 };
 //   };
 // }
 function buildInitialState(baseUser) {
-	const storeTypes = Array.isArray(baseUser.store_type)
-		? baseUser.store_type
-		: baseUser.store_type
-			? [baseUser.store_type]
-			: [];
+	const storeTypes = Array.isArray(baseUser.store_types)
+		? baseUser.store_types
+		: [];
 
 	return {
 		form: {
@@ -150,7 +148,7 @@ function Mypage() {
 				password: form.password || undefined,
 				categories,
 				regions,
-				store_type: storeTypes[0] ?? null,
+				store_types: storeTypes,
 			});
 			login(updated);
 			navigate("/");
