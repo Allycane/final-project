@@ -9,8 +9,13 @@ export async function getMyProfile() {
 	return new Promise((resolve) => setTimeout(() => resolve(mockUser), 200));
 }
 
+//POST -> PATCH로 변경
+//   export async function updateMyProfile(payload) {
+//     const { data } = await api.post("/api/auth/me/update", payload);
+//     return data;
+//   }
 export async function updateMyProfile(payload) {
-	const { data } = await api.post("/api/auth/me/update", payload);
+	const { data } = await api.patch("/api/auth/me/update", payload);
 	return data;
 }
 

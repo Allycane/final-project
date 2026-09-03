@@ -83,7 +83,9 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 
-@router.post("/me/update", response_model=UserResponse)
+# POST -> PATCH로 변경 
+# @router.post("/me/update", response_model=UserResponse)
+@router.patch("/me/update", response_model=UserResponse)
 def update_me(
    payload: UpdateProfileRequest,
    current_user: User = Depends(get_current_user),
