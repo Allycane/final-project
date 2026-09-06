@@ -86,10 +86,14 @@ function AiAnalysis() {
           <TextField
             label="분기별 목표 매출액 (만원)"
             id="targetSales"
-            type="number"
+            type="text"
+            inputMode="numeric"
             placeholder="예: 5,000"
-            value={targetSales}
-            onChange={(e) => setTargetSales(e.target.value)}
+            value={targetSales ? Number(targetSales).toLocaleString() : ""}
+            onChange={(e) => {
+              const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
+              setTargetSales(digitsOnly);
+            }}
           />
         </div>
 
