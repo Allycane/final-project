@@ -90,6 +90,15 @@ button {
   border-color: transparent;
 }
 
+.btn-danger {
+  background: var(--color-danger-text);
+  color: var(--color-white);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #a83a3a;
+}
+
 .btn-block {
   width: 100%;
 }

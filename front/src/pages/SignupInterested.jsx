@@ -88,10 +88,6 @@ function SignupInterested() {
 			<Card className="signup-page__panel">
 				<div className="signup-interest__grid">
 					<aside className="signup-interest__summary">
-						<h3>
-							{basicInfo.name ? `${basicInfo.name}님의 정보` : "나의 정보"}
-						</h3>
-
 						<p className="signup-interest__summary-label">관심 업종</p>
 						<div className="signup-interest__tag-list">
 							{selectedCategories.length === 0 && (

@@ -5,7 +5,7 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
 // import { mockUser } from "../mocks/users.js";
 // -> 실제 데이터가 들어가도록
-import { updateMyProfile } from "../api/userApi.js";
+import { updateMyProfile, deleteMyAccount } from "../api/userApi.js";
 import AddItemModal from "../components/mypage/AddItemModal.jsx";
 import Card from "../components/common/Card.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -83,7 +83,7 @@ function InterestSection({
 }
 
 function Mypage() {
-	const { user, login } = useAuth();
+	const { user, login, logout } = useAuth();
 	//   const baseUser = user ?? mockUser;
 	const baseUser = user ?? {};
 
@@ -96,6 +96,7 @@ function Mypage() {
 	}, [user]);
 	const [activeModalTab, setActiveModalTab] = useState(null);
 	const [isSaving, setIsSaving] = useState(false);
+	const [isWithdrawing, setIsWithdrawing] = useState(false);
 	const [error, setError] = useState("");
 
 	const { form, categories, regions, storeTypes } = state;
@@ -130,6 +131,21 @@ function Mypage() {
 
 	const handleCancel = () => {
 		navigate("/");
+	};
+
+	const handleWithdraw = async () => {
+		const confirmed = window.confirm(
+			"정말 회원 탈퇴하시겠습니까? 탈퇴 시 모든 정보가 삭제되며 되돌릴 수 없습니다.",
+		);
+		if (!confirmed) return;
+
+		setIsWithdrawing(true);
+		try {
+			await deleteMyAccount();
+			logout();
+		} finally {
+			setIsWithdrawing(false);
+		}
 	};
 
 	const handleSave = async () => {
@@ -270,6 +286,16 @@ function Mypage() {
 					onClose={() => setActiveModalTab(null)}
 				/>
 			)}
+
+			<div className="mypage__withdraw">
+				<Button
+					variant="danger"
+					onClick={handleWithdraw}
+					disabled={isWithdrawing}
+				>
+					{isWithdrawing ? "처리 중..." : "회원탈퇴"}
+				</Button>
+			</div>
 		</div>
 	);
 }
