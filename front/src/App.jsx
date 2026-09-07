@@ -4,8 +4,10 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import SignupBasic from "./pages/SignupBasic.jsx";
 import SignupInterested from "./pages/SignupInterested.jsx";
+import KakaoCallback from "./pages/KakaoCallback.jsx";
 import AiRecommendation from "./pages/AiRecommendation.jsx";
 import AiAnalysis from "./pages/AiAnalysis.jsx";
+import AiAnalysisComparison from "./pages/AiAnalysisComparison.jsx";
 import AiChatInfo from "./pages/AiChatInfo.jsx";
 import AiChatMain from "./pages/AiChatMain.jsx";
 import Mypage from "./pages/Mypage.jsx";
@@ -19,8 +21,10 @@ function App() {
 				<Route path="/login" element={<Login />} />
 				<Route path="/signup" element={<SignupBasic />} />
 				<Route path="/signup/interest" element={<SignupInterested />} />
+				<Route path="/oauth/kakao/callback" element={<KakaoCallback />} />
 				<Route path="/ai-recommendation" element={<AiRecommendation />} />
 				<Route path="/ai-analysis" element={<AiAnalysis />} />
+				<Route path="/ai-analysis/comparison" element={<AiAnalysisComparison />} />
 				<Route path="/ai-chat" element={<AiChatInfo />} />
 				<Route path="/ai-chat/main" element={<AiChatMain />} />
 				<Route element={<ProtectedRoute />}>

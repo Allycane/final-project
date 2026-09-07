@@ -52,3 +52,30 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+
+class KakaoLoginRequest(BaseModel):
+    code: str
+
+
+class KakaoProfile(BaseModel):
+    kakao_id: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+
+
+class KakaoLoginResponse(BaseModel):
+    is_new_user: bool
+    access_token: Optional[str] = None
+    token_type: str = "bearer"
+    user: Optional[UserResponse] = None
+    kakao_profile: Optional[KakaoProfile] = None
+
+
+class KakaoSignupInterestsRequest(BaseModel):
+    kakao_id: str
+    email: Optional[EmailStr] = None
+    name: str
+    categories: list[str] = []
+    regions: list[str] = []
+    storeTypes: list[str] = []
+

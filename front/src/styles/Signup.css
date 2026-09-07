@@ -93,3 +93,8 @@
 .signup-interest__actions {
   margin-top: 32px;
 }
+
+.signup-page__submit-row {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { signupInterests } from "../api/authApi.js";
+import { signupInterests, kakaoSignupInterests } from "../api/authApi.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { mockCategoryGroups, mockStoreTypes } from "../mocks/categories.js";
 import { mockRegions } from "../mocks/regions.js";
@@ -17,7 +17,7 @@ function SignupInterested() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { login } = useAuth();
-	const basicInfo = location.state ?? {};
+	const { kakaoProfile, isKakaoFlow, ...basicInfo } = location.state ?? {};
 
 	const [selectedCategories, setSelectedCategories] = useState([]);
 	const [selectedRegions, setSelectedRegions] = useState([]);
@@ -66,13 +66,28 @@ function SignupInterested() {
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
 		try {
-			const payload = {
-				...basicInfo,
+			const interests = {
 				categories: selectedCategories.map(categoryName),
 				regions: selectedRegions.map(regionName),
 				storeTypes: selectedStoreTypes.map(storeTypeName), // storeType → storeTypes로 변경
 			};
-			const user = await signupInterests(payload);
+
+			if (isKakaoFlow) {
+				const user = await kakaoSignupInterests({
+					kakao_id: kakaoProfile?.kakao_id,
+					email: kakaoProfile?.email,
+					name: kakaoProfile?.name,
+					...interests,
+				});
+				login(user);
+				alert(
+					"회원가입이 완료되었습니다. 마이페이지에서 전화번호를 추가로 입력해주세요.",
+				);
+				navigate("/mypage", { state: { promptPhone: true } });
+				return;
+			}
+
+			const user = await signupInterests({ ...basicInfo, ...interests });
 			login(user);
 			navigate("/");
 		} finally {

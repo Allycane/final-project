@@ -1,9 +1,10 @@
 fastapi
-uvicorn 
+uvicorn
 sqlalchemy
 pymysql
 pydantic
 python-dotenv
+requests
 # security
 passlib
 bcrypt == 4.0.1
