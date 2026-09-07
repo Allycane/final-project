@@ -19,6 +19,11 @@ export async function updateMyProfile(payload) {
 	return data;
 }
 
+export async function deleteMyAccount() {
+	const { data } = await api.delete("/api/auth/me");
+	return data;
+}
+
 // import { mockUser } from "../mocks/users.js";
 
 // export async function getMyProfile() {

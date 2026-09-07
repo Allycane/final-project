@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { getSalesAnalysis } from "../api/analysisApi.js";
@@ -52,7 +53,12 @@ function AiAnalysis() {
       </div>
 
       <Card className="ai-analysis__condition">
-        <h2>분석 조건 설정</h2>
+        <div className="ai-analysis__condition-head">
+          <h2>분석 조건 설정</h2>
+          <Link to="/ai-analysis/comparison" className="ai-analysis__compare-link">
+            지역별 분석 비교
+          </Link>
+        </div>
         <p className="ai-analysis__desc">분석에 필요한 조건을 선택한 후 AI 매출 분석을 시작하세요.</p>
 
         <div className="ai-analysis__condition-grid">
@@ -86,10 +92,14 @@ function AiAnalysis() {
           <TextField
             label="분기별 목표 매출액 (만원)"
             id="targetSales"
-            type="number"
+            type="text"
+            inputMode="numeric"
             placeholder="예: 5,000"
-            value={targetSales}
-            onChange={(e) => setTargetSales(e.target.value)}
+            value={targetSales ? Number(targetSales).toLocaleString() : ""}
+            onChange={(e) => {
+              const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
+              setTargetSales(digitsOnly);
+            }}
           />
         </div>
 

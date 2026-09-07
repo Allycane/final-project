@@ -110,6 +110,12 @@
   font-size: 15px;
 }
 
+.mypage__withdraw {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 40px;
+}
+
 /* ---- 항목 추가 Modal ---- */
 .add-item-modal__backdrop {
   position: fixed;

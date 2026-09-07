@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
-import { login as loginRequest } from "../api/authApi.js";
+import { login as loginRequest, getKakaoAuthorizeUrl } from "../api/authApi.js";
 import { useAuth } from "../hooks/useAuth.js";
 import TextField from "../components/common/TextField.jsx";
 import Checkbox from "../components/common/Checkbox.jsx";
@@ -21,6 +21,10 @@ function Login() {
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleKakaoLogin = () => {
+    window.location.href = getKakaoAuthorizeUrl();
   };
 
   const handleSubmit = async (event) => {
@@ -95,9 +99,23 @@ function Login() {
 
             {error && <p className="auth-card__error">{error}</p>}
 
-            <Button type="submit" block disabled={isSubmitting}>
-              {isSubmitting ? "로그인 중..." : "로그인"}
-            </Button>
+            <div className="auth-card__button-row">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "로그인 중..." : "로그인"}
+              </Button>
+              <button
+                type="button"
+                className="kakao-login-btn"
+                onClick={handleKakaoLogin}
+              >
+                <img
+                  src="/img/kakao-login/kakao_login_large_wide.png"
+                  alt="카카오 로그인"
+                  width={300}
+                  height={45}
+                />
+              </button>
+            </div>
           </div>
         </form>
 

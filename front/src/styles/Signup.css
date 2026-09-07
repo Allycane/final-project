@@ -36,6 +36,12 @@
   gap: 32px;
 }
 
+.signup-interest__summary {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
 .signup-interest__summary h3 {
   font-size: 15px;
   margin: 0 0 16px;
@@ -86,4 +92,9 @@
 
 .signup-interest__actions {
   margin-top: 32px;
+}
+
+.signup-page__submit-row {
+  display: flex;
+  justify-content: flex-end;
 }
