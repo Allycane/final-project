@@ -12,6 +12,7 @@ class User(Base):
    password_hash = Column(String(255), nullable=False)
    name = Column(String(100), nullable=False)
    phone = Column(String(20))
+   kakao_id = Column(String(64), unique=True, nullable=True, index=True)
    store_types = Column(JSON, default=list)
    categories = Column(JSON, default=list)
    regions = Column(JSON, default=list)

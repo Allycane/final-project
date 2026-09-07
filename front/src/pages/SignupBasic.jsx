@@ -26,11 +26,23 @@ function SignupBasic() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    // 전화번호는 하이픈(-) 없이 숫자만 입력받는다. 하이픈은 백엔드에서 붙여준다.
+    const nextValue = name === "phone" ? value.replace(/[^0-9]/g, "") : value;
+    setForm((prev) => ({ ...prev, [name]: nextValue }));
   };
+
+  const passwordTooShort = form.password.length > 0 && form.password.length < 8;
+  const passwordConfirmTooShort =
+    form.passwordConfirm.length > 0 && form.passwordConfirm.length < 8;
+  const PASSWORD_LENGTH_ERROR = "비밀번호는 8자리 이상이어야 합니다.";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (form.password.length < 8 || form.passwordConfirm.length < 8) {
+      setError(PASSWORD_LENGTH_ERROR);
+      return;
+    }
 
     if (form.password !== form.passwordConfirm) {
       setError("비밀번호가 일치하지 않습니다.");
@@ -83,8 +95,10 @@ function SignupBasic() {
                 id="phone"
                 name="phone"
                 type="tel"
+                inputMode="numeric"
+                maxLength={11}
                 icon={<FontAwesomeIcon icon={faPhone} />}
-                placeholder="010-1234-5678"
+                placeholder="01012345678"
                 value={form.phone}
                 onChange={handleChange}
                 required
@@ -111,6 +125,7 @@ function SignupBasic() {
               placeholder="비밀번호를 입력해주세요"
               value={form.password}
               onChange={handleChange}
+              error={passwordTooShort ? PASSWORD_LENGTH_ERROR : ""}
               required
             />
             <TextField
@@ -122,14 +137,17 @@ function SignupBasic() {
               placeholder="비밀번호를 다시 입력해주세요"
               value={form.passwordConfirm}
               onChange={handleChange}
+              error={passwordConfirmTooShort ? PASSWORD_LENGTH_ERROR : ""}
               required
             />
 
             {error && <p className="signup-page__error">{error}</p>}
 
-            <Button type="submit" block disabled={isSubmitting}>
-              {isSubmitting ? "처리 중..." : "다음 단계로 →"}
-            </Button>
+            <div className="signup-page__submit-row">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "다음 단계로 →"}
+              </Button>
+            </div>
           </div>
         </form>
 

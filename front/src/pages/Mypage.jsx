@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"; // useEffect 추가
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react"; // useEffect 추가
+import { useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
@@ -88,12 +88,21 @@ function Mypage() {
 	const baseUser = user ?? {};
 
 	const navigate = useNavigate();
+	const location = useLocation();
+	const phoneInputRef = useRef(null);
 	const [state, setState] = useState(() => buildInitialState(baseUser));
 	useEffect(() => {
 		if (user) {
 			setState(buildInitialState(user));
 		}
 	}, [user]);
+
+	useEffect(() => {
+		if (location.state?.promptPhone) {
+			alert("전화번호를 입력해주세요.");
+			phoneInputRef.current?.focus();
+		}
+	}, [location.state]);
 	const [activeModalTab, setActiveModalTab] = useState(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -109,7 +118,9 @@ function Mypage() {
 
 	const handleFieldChange = (event) => {
 		const { name, value } = event.target;
-		setState((prev) => ({ ...prev, form: { ...prev.form, [name]: value } }));
+		// 전화번호는 하이픈(-) 없이 숫자만 입력받는다. 하이픈은 백엔드에서 붙여준다.
+		const nextValue = name === "phone" ? value.replace(/[^0-9]/g, "") : value;
+		setState((prev) => ({ ...prev, form: { ...prev.form, [name]: nextValue } }));
 	};
 
 	const removeItem = (tab, name) => {
@@ -191,10 +202,14 @@ function Mypage() {
 						onChange={handleFieldChange}
 					/>
 					<TextField
+						ref={phoneInputRef}
 						label="전화번호"
 						id="phone"
 						name="phone"
 						type="tel"
+						inputMode="numeric"
+						maxLength={11}
+						placeholder="01012345678"
 						value={form.phone}
 						onChange={handleFieldChange}
 					/>
