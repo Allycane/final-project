@@ -21,7 +21,7 @@ from schemas.user import (
 )
 from core.security import hash_password, verify_password, create_access_token, decode_access_token
 
-KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY")
+KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
 KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -95,21 +95,25 @@ def kakao_login(payload: KakaoLoginRequest, db: Session = Depends(get_db)):
       "https://kauth.kakao.com/oauth/token",
       data={
          "grant_type": "authorization_code",
-         "client_id": KAKAO_REST_API_KEY,
+         "client_id": KAKAO_CLIENT_ID,
          "redirect_uri": KAKAO_REDIRECT_URI,
          "code": payload.code,
       },
       headers={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
+      timeout=5,
    )
    if token_res.status_code != 200:
+      print("KAKAO TOKEN ERROR:", token_res.status_code, token_res.text)  # 임시 디버그, 원인 확인 후 삭제
       raise HTTPException(status_code=400, detail="카카오 인증에 실패했습니다.")
    kakao_access_token = token_res.json().get("access_token")
 
    profile_res = requests.get(
       "https://kapi.kakao.com/v2/user/me",
       headers={"Authorization": f"Bearer {kakao_access_token}"},
+      timeout=5,
    )
    if profile_res.status_code != 200:
+      print("KAKAO PROFILE ERROR:", profile_res.status_code, profile_res.text)  # 임시 디버그, 원인 확인 후 삭제
       raise HTTPException(status_code=400, detail="카카오 사용자 정보를 가져오지 못했습니다.")
 
    profile = profile_res.json()
@@ -145,7 +149,7 @@ def kakao_signup_interests(payload: KakaoSignupInterestsRequest, db: Session = D
       raise HTTPException(status_code=400, detail="이미 가입된 카카오 계정입니다.")
 
    user = User(
-      email=payload.email or f"kakao_{payload.kakao_id}@kakao.local",
+      email=payload.email or f"kakao_{payload.kakao_id}@example.com",
       password_hash=hash_password(secrets.token_urlsafe(32)),
       name=payload.name or "카카오 사용자",
       kakao_id=payload.kakao_id,
@@ -198,3 +202,13 @@ def update_me(
    db.commit()
    db.refresh(current_user)
    return current_user
+
+# 회원 탈퇴 (프론트 마이페이지 탈퇴 버튼 연동용)
+@router.delete("/me")
+def delete_me(
+   current_user: User = Depends(get_current_user),
+   db: Session = Depends(get_db),
+):
+   db.delete(current_user)
+   db.commit()
+   return {"detail": "탈퇴가 완료되었습니다."}
