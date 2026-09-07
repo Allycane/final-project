@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 업종 대분류/중분류 테이블 (팀원이 실제 DB에 적용한 버전 기준).
 
@@ -8,19 +7,15 @@ users.categories 컬럼에는 sub_categories.name 값이 그대로 배열로 저
 이 모델은 챗봇 컨텍스트를 더 풍부하게 만들기 위해 중분류 -> 대분류 이름을
 함께 보여주는 용도로 사용합니다 (예: "커피-음료" -> "외식업").
 """
-=======
->>>>>>> 03256543972e91f65ac512a99627df7957f289a0
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+
 from database.connection import Base
 
 
 class MajorCategory(Base):
     """업종 대분류 (외식업/서비스업/도소매업). code는 CS1/CS2/CS3."""
-<<<<<<< HEAD
 
-=======
->>>>>>> 03256543972e91f65ac512a99627df7957f289a0
     __tablename__ = "major_categories"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -35,10 +30,7 @@ class MajorCategory(Base):
 
 class SubCategory(Base):
     """업종 중분류 (실제 세부 업종). code는 실제 service_code(CS100001 등)와 동일."""
-<<<<<<< HEAD
 
-=======
->>>>>>> 03256543972e91f65ac512a99627df7957f289a0
     __tablename__ = "sub_categories"
 
     id = Column(Integer, primary_key=True, index=True)
