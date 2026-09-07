@@ -1,13 +1,14 @@
-import { mockBotReply } from "../mocks/chatMessages";
+import api from "./axiosInstance";
 
-export async function sendMessage(message) {
-  // TODO: FastAPI/LLM 연동 - axiosInstance의 api를 import해서 실제 엔드포인트로 교체
-  // import api from "./axiosInstance";
-  // const { data } = await api.post("/api/chat", { message });
-  // return data;
-  console.debug("[mock] sendMessage message:", message);
-
-  return new Promise((resolve) =>
-    setTimeout(() => resolve({ ...mockBotReply, id: Date.now() }), 500)
-  );
+/**
+ * @param {string} message - 사용자가 입력한 메시지
+ * @param {number|null} sessionId - 이어지는 대화면 이전 응답의 session_id, 첫 메시지면 null
+ * @returns {Promise<{session_id: number, reply: string}>}
+ */
+export async function sendMessage(message, sessionId = null) {
+  const { data } = await api.post("/api/chat", {
+    message,
+    session_id: sessionId,
+  });
+  return data; 
 }

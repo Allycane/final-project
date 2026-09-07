@@ -4,10 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database.connection import Base, engine
 from router.auth import router as auth_router
 from router.analysis import router as analysis_router
-
-
-# from routes.auth import router as auth_router
-# from routes.users import user_router
+from router.chat import router as chat_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,9 +23,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(auth_router, prefix="/api/auth")
 app.include_router(auth_router)
 app.include_router(analysis_router)
+app.include_router(chat_router)
 
 
 
