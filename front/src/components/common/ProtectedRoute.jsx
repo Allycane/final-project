@@ -9,7 +9,7 @@ function ProtectedRoute() {
 	}
 
 	if (!isLoggedIn) {
-		return <Navigate to="/" replace />;
+		return <Navigate to="/login" replace state={{ authRequired: true }} />;
 	}
 
 	return <Outlet />;
