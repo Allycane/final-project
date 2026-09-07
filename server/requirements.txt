@@ -11,3 +11,7 @@ bcrypt == 4.0.1
 python-jose
 pandas
 email-validator
+cryptography==43.0.0
+openai==1.55.3
+httpx==0.28.1
+python-multipart==0.0.9

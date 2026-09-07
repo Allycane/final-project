@@ -20,11 +20,21 @@ function AiChatMain() {
   const [messages, setMessages] = useState(mockInitialMessages);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  // 백엔드가 대화 맥락을 유지하는 기준값. 첫 메시지는 null로 보내고,
+  // 이후 응답으로 받은 session_id를 계속 재사용해야 같은 대화로 이어집니다.
+  const [sessionId, setSessionId] = useState(null);
 
   const appendUserMessage = (text) => {
     setMessages((prev) => [
       ...prev,
       { id: Date.now(), role: "user", text, time: "지금" },
+    ]);
+  };
+
+  const appendBotMessage = (text) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), role: "bot", text, time: "지금" },
     ]);
   };
 
@@ -36,8 +46,18 @@ function AiChatMain() {
     setInput("");
     setIsSending(true);
     try {
-      const reply = await sendMessage(content);
-      setMessages((prev) => [...prev, { ...reply, time: "지금" }]);
+      const { session_id, reply } = await sendMessage(content, sessionId);
+      setSessionId(session_id);
+      appendBotMessage(reply);
+    } catch (error) {
+      // 로그인 만료(401) 등으로 요청이 실패해도 채팅창이 멈추지 않도록 처리
+      const status = error?.response?.status;
+      if (status === 401) {
+        appendBotMessage("로그인이 만료됐어요. 다시 로그인한 뒤 시도해주세요.");
+      } else {
+        appendBotMessage("답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.");
+      }
+      console.error("[AiChatMain] sendMessage failed:", error);
     } finally {
       setIsSending(false);
     }
