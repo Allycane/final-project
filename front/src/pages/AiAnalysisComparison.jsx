@@ -1,19 +1,32 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { getSalesAnalysis } from "../api/analysisApi.js";
 import { mockRegions } from "../mocks/regions.js";
 import { mockCategoryGroups } from "../mocks/categories.js";
+import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import StatTile from "../components/common/StatTile.jsx";
+import RecentSelections from "../components/common/RecentSelections.jsx";
 import SalesLineChart from "../components/analysis/SalesLineChart.jsx";
 import "../styles/AiAnalysis.css";
 
 function regionName(code) {
   return mockRegions.find((r) => r.code === code)?.name ?? code;
+}
+
+function majorName(code) {
+  return mockCategoryGroups.find((group) => group.code === code)?.name ?? code;
+}
+
+function minorName(code) {
+  return mockCategoryGroups
+    .flatMap((group) => group.children)
+    .find((child) => child.code === code)?.name ?? code;
 }
 
 function ResultColumn({ regionCode, result }) {
@@ -48,6 +61,8 @@ function AiAnalysisComparison() {
   const [result, setResult] = useState(null);
   const [compareResult, setCompareResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { items: recentItems, addSelection, removeSelection } =
+    useRecentSelections("recentSelections:ai-analysis-comparison");
 
   const minorOptions =
     mockCategoryGroups.find((group) => group.code === majorCategory)?.children ?? [];
@@ -61,9 +76,29 @@ function AiAnalysisComparison() {
       ]);
       setResult(data);
       setCompareResult(compareData);
+      addSelection({
+        label: `${regionName(region)} vs ${regionName(compareRegion)} · ${majorName(
+          majorCategory,
+        )} · ${minorName(minorCategory)} · 목표 ${Number(
+          targetSales || 0,
+        ).toLocaleString()}만원`,
+        region,
+        compareRegion,
+        majorCategory,
+        minorCategory,
+        targetSales,
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const restoreSelection = (item) => {
+    setRegion(item.region);
+    setCompareRegion(item.compareRegion);
+    setMajorCategory(item.majorCategory);
+    setMinorCategory(item.minorCategory);
+    setTargetSales(item.targetSales);
   };
 
   return (
@@ -77,8 +112,19 @@ function AiAnalysisComparison() {
         </p>
       </div>
 
+      <RecentSelections
+        items={recentItems}
+        onSelect={restoreSelection}
+        onRemove={removeSelection}
+      />
+
       <Card className="ai-analysis__condition">
-        <h2>분석 조건 설정</h2>
+        <div className="ai-analysis__condition-head">
+          <h2>분석 조건 설정</h2>
+          <Link to="/ai-analysis" className="btn btn-outline ai-analysis__compare-link">
+            ← AI 매출 분석으로 돌아가기
+          </Link>
+        </div>
         <p className="ai-analysis__desc">비교할 두 지역과 업종, 목표 매출을 선택한 후 분석을 시작하세요.</p>
 
         <div className="ai-analysis__condition-grid ai-analysis__condition-grid--2col">

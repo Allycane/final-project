@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
+import { faEnvelope, faEye, faEyeSlash } from "@fortawesome/free-regular-svg-icons";
 import { faUser, faPhone, faLock } from "@fortawesome/free-solid-svg-icons";
 import { signupBasic } from "../api/authApi.js";
 import { SIGNUP_STEPS } from "../constants/signup.js";
+import { formatPhoneNumber, toPhoneDigits } from "../utils/phone.js";
 import StepIndicator from "../components/common/StepIndicator.jsx";
 import TextField from "../components/common/TextField.jsx";
 import Button from "../components/common/Button.jsx";
@@ -21,38 +22,46 @@ function SignupBasic() {
     passwordConfirm: "",
     phone: "",
   });
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    // 전화번호는 하이픈(-) 없이 숫자만 입력받는다. 하이픈은 백엔드에서 붙여준다.
-    const nextValue = name === "phone" ? value.replace(/[^0-9]/g, "") : value;
+    // 프론트에서는 010-1234-5678 형식으로 입력받고, 백엔드 전송 시 숫자만 남긴다.
+    const nextValue = name === "phone" ? formatPhoneNumber(value) : value;
     setForm((prev) => ({ ...prev, [name]: nextValue }));
   };
+
+  const PASSWORD_LENGTH_ERROR = "비밀번호는 8자리 이상이어야 합니다.";
+  const PASSWORD_MISMATCH_ERROR = "비밀번호가 일치하지 않습니다.";
 
   const passwordTooShort = form.password.length > 0 && form.password.length < 8;
   const passwordConfirmTooShort =
     form.passwordConfirm.length > 0 && form.passwordConfirm.length < 8;
-  const PASSWORD_LENGTH_ERROR = "비밀번호는 8자리 이상이어야 합니다.";
+  const passwordMismatch =
+    !passwordConfirmTooShort &&
+    form.passwordConfirm.length > 0 &&
+    form.password !== form.passwordConfirm;
+
+  const passwordConfirmError = passwordConfirmTooShort
+    ? PASSWORD_LENGTH_ERROR
+    : passwordMismatch
+      ? PASSWORD_MISMATCH_ERROR
+      : "";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (form.password.length < 8 || form.passwordConfirm.length < 8) {
-      setError(PASSWORD_LENGTH_ERROR);
-      return;
-    }
+    if (form.password.length < 8 || form.passwordConfirm.length < 8) return;
+    if (form.password !== form.passwordConfirm) return;
 
-    if (form.password !== form.passwordConfirm) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
-    }
-
-    setError("");
     setIsSubmitting(true);
     try {
-      const basicInfo = await signupBasic(form);
+      const basicInfo = await signupBasic({
+        ...form,
+        phone: toPhoneDigits(form.phone),
+      });
       navigate("/signup/interest", { state: basicInfo });
     } finally {
       setIsSubmitting(false);
@@ -96,9 +105,9 @@ function SignupBasic() {
                 name="phone"
                 type="tel"
                 inputMode="numeric"
-                maxLength={11}
+                maxLength={13}
                 icon={<FontAwesomeIcon icon={faPhone} />}
-                placeholder="01012345678"
+                placeholder="010-1234-5678"
                 value={form.phone}
                 onChange={handleChange}
                 required
@@ -120,8 +129,14 @@ function SignupBasic() {
               label="비밀번호"
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               icon={<FontAwesomeIcon icon={faLock} />}
+              rightIcon={
+                <FontAwesomeIcon
+                  icon={showPassword ? faEyeSlash : faEye}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                />
+              }
               placeholder="비밀번호를 입력해주세요"
               value={form.password}
               onChange={handleChange}
@@ -132,16 +147,20 @@ function SignupBasic() {
               label="비밀번호 확인"
               id="passwordConfirm"
               name="passwordConfirm"
-              type="password"
+              type={showPasswordConfirm ? "text" : "password"}
               icon={<FontAwesomeIcon icon={faLock} />}
+              rightIcon={
+                <FontAwesomeIcon
+                  icon={showPasswordConfirm ? faEyeSlash : faEye}
+                  onClick={() => setShowPasswordConfirm((prev) => !prev)}
+                />
+              }
               placeholder="비밀번호를 다시 입력해주세요"
               value={form.passwordConfirm}
               onChange={handleChange}
-              error={passwordConfirmTooShort ? PASSWORD_LENGTH_ERROR : ""}
+              error={passwordConfirmError}
               required
             />
-
-            {error && <p className="signup-page__error">{error}</p>}
 
             <div className="signup-page__submit-row">
               <Button type="submit" disabled={isSubmitting}>
@@ -152,7 +171,10 @@ function SignupBasic() {
         </form>
 
         <p className="auth-card__footer">
-          이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+          이미 계정이 있으신가요?{" "}
+          <Link to="/login" state={{ from: "/signup" }}>
+            로그인
+          </Link>
         </p>
       </Card>
     </div>

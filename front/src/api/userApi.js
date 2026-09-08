@@ -24,6 +24,12 @@ export async function deleteMyAccount() {
 	return data;
 }
 
+// TODO: FastAPI 연동 - /ai-chat/info 에서 로그인한 사용자의 관심 업종/지역을 조회할 때 사용
+// export async function getMyInterests() {
+//   const { data } = await api.get("/api/auth/me");
+//   return { categories: data.categories, regions: data.regions };
+// }
+
 // import { mockUser } from "../mocks/users.js";
 
 // export async function getMyProfile() {

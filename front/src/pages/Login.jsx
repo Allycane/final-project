@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
+import { faEnvelope, faEye, faEyeSlash } from "@fortawesome/free-regular-svg-icons";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
 import { login as loginRequest, getKakaoAuthorizeUrl } from "../api/authApi.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -13,10 +13,15 @@ import "../styles/Auth.css";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "", keepLoggedIn: false });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // 로그인 전에 있던 페이지로 되돌아가기 위한 경로. 없으면 홈으로 이동한다.
+  const from = location.state?.from ?? "/";
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -24,6 +29,9 @@ function Login() {
   };
 
   const handleKakaoLogin = () => {
+    // 카카오 로그인은 외부 페이지로 리다이렉트되어 라우터 state가 유지되지 않으므로
+    // sessionStorage에 임시로 저장해두었다가 콜백에서 사용한다.
+    sessionStorage.setItem("postLoginRedirect", from);
     window.location.href = getKakaoAuthorizeUrl();
   };
 
@@ -34,7 +42,7 @@ function Login() {
     try {
       const user = await loginRequest(form.email, form.password);
       login(user);
-      navigate("/");
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,8 +82,14 @@ function Login() {
               label="비밀번호"
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               icon={<FontAwesomeIcon icon={faLock} />}
+              rightIcon={
+                <FontAwesomeIcon
+                  icon={showPassword ? faEyeSlash : faEye}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                />
+              }
               placeholder="비밀번호를 입력해주세요"
               value={form.password}
               onChange={handleChange}
