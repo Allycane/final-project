@@ -46,6 +46,7 @@ def add_growth_and_net_change(df: pd.DataFrame) -> pd.DataFrame:
     grp = df.groupby(["district_code", "service_code"], group_keys=False)
 
     df["prev_sales"] = grp["monthly_sales_amount"].shift(1)
+    df["prev_sales_data_type"] = grp["sales_data_type"].shift(1)
     df["sales_growth_rate"] = (df["monthly_sales_amount"] - df["prev_sales"]) / df["prev_sales"]
     df["net_store_change_rate"] = (
         (df["opening_store_count"] - df["closing_store_count"])
@@ -54,6 +55,29 @@ def add_growth_and_net_change(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.replace([np.inf, -np.inf], np.nan)
     return df.dropna(subset=["sales_growth_rate", "net_store_change_rate"])
+
+
+# 실시간 서비스(router/inference.py)와 반드시 동일하게 맞춰야 하는 데이터 품질 기준.
+# 이 값이 서로 달라지면 "서비스에서는 안 보여주는 조건인데 모델은 그걸로 학습한"
+# 불일치가 생기므로, 두 파일 다 고칠 때 함께 맞춰야 한다.
+VOLATILITY_THRESHOLD = 0.5
+
+
+def add_quality_filter(df: pd.DataFrame) -> pd.DataFrame:
+    """실시간 서비스와 동일한 기준으로 학습 데이터도 정제한다.
+    1) 이번 분기 또는 전분기 매출이 mock(추정치)이면 성장률이 진짜 시장 신호가
+       아니므로 제외 (전체 데이터의 약 38%가 mock으로 확인됨)
+    2) 실측이어도 성장률 절대값이 50% 이상이면(부동산중개업처럼 원래 변동성이
+       큰 업종) 과적합 위험이 있는 극단치이므로 제외
+    이렇게 해야 "서비스에서는 안 보여줄 데이터로 모델이 학습되는" 불일치를 막는다."""
+    before = len(df)
+    is_mock = (df["sales_data_type"] != "actual") | (df["prev_sales_data_type"] != "actual")
+    is_volatile = (~is_mock) & (df["sales_growth_rate"].abs() >= VOLATILITY_THRESHOLD)
+
+    df = df[~(is_mock | is_volatile)].copy()
+    print(f"[quality_filter] {before}건 -> {len(df)}건 "
+          f"(mock {is_mock.sum()}건, 변동성과다 {is_volatile.sum()}건 제외)")
+    return df
 
 
 def add_percentile_labels(df: pd.DataFrame) -> pd.DataFrame:
@@ -68,10 +92,23 @@ def add_percentile_labels(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_next_quarter_label(df: pd.DataFrame) -> pd.DataFrame:
+    """다음 분기 라벨을 만든다. 품질 필터링 때문에 한 조합의 분기 시퀀스에
+    '구멍'(중간 분기가 빠짐)이 생길 수 있어서, 단순히 그룹 내 다음 행을 쓰는
+    shift(-1) 방식은 위험하다 (구멍 바로 다음 분기를 진짜 다음 분기로 착각할 수 있음).
+    대신 실제 분기 코드 순서를 기준으로 '진짜 바로 다음 분기'가 몇 번인지 계산해서,
+    그 분기의 데이터가 실제로 존재할 때만 라벨을 붙인다."""
     df = df.sort_values(["district_code", "service_code", "year_quarter_code"]).copy()
-    grp = df.groupby(["district_code", "service_code"], group_keys=False)
-    df["target_next_top25"] = grp["is_top25_growth"].shift(-1)
-    df = df.dropna(subset=["target_next_top25"])
+
+    quarters_sorted = sorted(df["year_quarter_code"].unique())
+    quarter_to_next = {q: quarters_sorted[i + 1] for i, q in enumerate(quarters_sorted[:-1])}
+    df["expected_next_quarter"] = df["year_quarter_code"].map(quarter_to_next)
+
+    label_source = df[["district_code", "service_code", "year_quarter_code", "is_top25_growth"]].rename(
+        columns={"year_quarter_code": "expected_next_quarter", "is_top25_growth": "target_next_top25"}
+    )
+
+    df = df.merge(label_source, on=["district_code", "service_code", "expected_next_quarter"], how="left")
+    df = df.dropna(subset=["target_next_top25", "expected_next_quarter"])
     df["target_next_top25"] = df["target_next_top25"].astype(int)
     return df
 
@@ -115,6 +152,7 @@ def prepare_train_test():
     df = load_data()
     df = add_service_category(df)
     df = add_growth_and_net_change(df)
+    df = add_quality_filter(df)
     df = add_percentile_labels(df)
     df = add_next_quarter_label(df)
 

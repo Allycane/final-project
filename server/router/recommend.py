@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from database.connection import get_db
 from models.category import MajorCategory
-from router.category_mapping import resolve_service_codes
+from router.category_mapping import resolve_primary_codes, resolve_reference_pool
 from router.inference import build_recommendation_result
 
 router = APIRouter()
@@ -77,19 +77,21 @@ def post_recommendation(req: RecommendationRequest, db: Session = Depends(get_db
     if not req.region:
         raise HTTPException(status_code=400, detail="region은 필수입니다.")
 
-    service_codes = resolve_service_codes(db, req.majorCategories, req.subCategories)
-    if not service_codes:
+    primary_codes = resolve_primary_codes(db, req.majorCategories, req.subCategories)
+    if not primary_codes:
         raise HTTPException(
             status_code=400,
             detail="majorCategories 또는 subCategories 중 최소 하나는 선택해야 합니다.",
         )
+
+    reference_codes = resolve_reference_pool(db, req.majorCategories, req.subCategories)
 
     try:
         district_code = int(req.region)
     except ValueError:
         raise HTTPException(status_code=400, detail="region은 자치구 코드(숫자)여야 합니다.")
 
-    result = build_recommendation_result(district_code, service_codes)
+    result = build_recommendation_result(district_code, primary_codes, reference_codes)
 
     if result["recommended"] is None:
         raise HTTPException(

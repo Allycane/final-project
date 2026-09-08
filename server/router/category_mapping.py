@@ -16,19 +16,15 @@ from sqlalchemy.orm import Session
 from models.category import MajorCategory, SubCategory
 
 
-def resolve_service_codes(db: Session, major_categories: list[str], sub_categories: list[str]) -> list[str]:
-    """사용자가 선택한 대분류/중분류를 DB 기준으로 검증된 service_code 목록으로 변환.
+def resolve_primary_codes(db: Session, major_categories: list[str], sub_categories: list[str]) -> list[str]:
+    """추천/비추천 순위를 매길 '주 후보군' - 사용자가 실제로 체크한 항목 그 자체.
 
-    - sub_categories가 있으면: DB에 실제 존재하는 코드만 걸러서 반환
-    - sub_categories 없이 major_categories만 있으면: 그 대분류에 속한 중분류 전체 코드 반환
+    - sub_categories가 있으면: 체크한 그 코드들 (DB에 실존하는 것만 검증)
+    - sub_categories 없이 major_categories만 있으면: 그 대분류 전체
     - 둘 다 없으면: 빈 리스트
     """
     if sub_categories:
-        rows = (
-            db.query(SubCategory.code)
-            .filter(SubCategory.code.in_(sub_categories))
-            .all()
-        )
+        rows = db.query(SubCategory.code).filter(SubCategory.code.in_(sub_categories)).all()
         return sorted({row.code for row in rows})
 
     if major_categories:
@@ -41,3 +37,28 @@ def resolve_service_codes(db: Session, major_categories: list[str], sub_categori
         return sorted({row.code for row in rows})
 
     return []
+
+
+def resolve_reference_pool(db: Session, major_categories: list[str], sub_categories: list[str]) -> list[str]:
+    """'선택 안 했지만 참고할 업종'을 뽑을 후보군 - 관련 대분류 전체 중
+    사용자가 체크하지 않은 나머지. sub_categories를 아예 안 골랐으면(대분류만 선택)
+    제외할 게 없으므로 빈 리스트(참고 항목 없음)를 반환.
+    """
+    if not sub_categories:
+        return []
+
+    if major_categories:
+        prefixes = set(major_categories)
+    else:
+        prefixes = {code[:3] for code in sub_categories}
+
+    rows = (
+        db.query(SubCategory.code)
+        .join(MajorCategory, SubCategory.major_id == MajorCategory.id)
+        .filter(MajorCategory.code.in_(prefixes))
+        .all()
+    )
+    pool = {row.code for row in rows}
+    pool -= set(sub_categories)  # 체크한 건 참고 후보에서 제외
+
+    return sorted(pool)
