@@ -12,7 +12,9 @@ import {
   getCategoryGroups,
   getRecommendation,
 } from "../api/recommendationApi.js";
+import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import MultiSelectDropdown from "../components/common/MultiSelectDropdown.jsx";
+import RecentSelections from "../components/common/RecentSelections.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Badge from "../components/common/Badge.jsx";
@@ -25,25 +27,35 @@ const BADGE_VARIANT = {
   쇠퇴: "bad",
 };
 
-function ResultPanel({ variant, icon, title, items }) {
+const MIN_SUB_CATEGORIES = 3;
+
+function ResultPanel({ variant, icon, title, items, disabled, disabledMessage }) {
   return (
-    <Card className={`result-panel result-panel--${variant}`}>
+    <Card
+      className={`result-panel result-panel--${variant} ${
+        disabled ? "result-panel--disabled" : ""
+      }`.trim()}
+    >
       <div className="result-panel__head">
         <span className="result-panel__head-icon">{icon}</span>
         <span className="result-panel__head-title">{title}</span>
       </div>
 
-      <div className="result-panel__items">
-        {items.map((item) => (
-          <div className="result-panel__item" key={item.name}>
-            <div className="result-panel__item-text">
-              <h3>{item.name}</h3>
-              <p>{item.description}</p>
+      {disabled ? (
+        <p className="result-panel__disabled-message">{disabledMessage}</p>
+      ) : (
+        <div className="result-panel__items">
+          {items.map((item) => (
+            <div className="result-panel__item" key={item.name}>
+              <div className="result-panel__item-text">
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+              </div>
+              <Badge variant={BADGE_VARIANT[item.badge] ?? "info"}>{item.badge}</Badge>
             </div>
-            <Badge variant={BADGE_VARIANT[item.badge] ?? "info"}>{item.badge}</Badge>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }
@@ -52,35 +64,34 @@ function AiRecommendation() {
   const [regions, setRegions] = useState([]);
   const [categoryGroups, setCategoryGroups] = useState([]);
   const [region, setRegion] = useState("");
-  const [selectedMajors, setSelectedMajors] = useState([]);
+  const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedSubs, setSelectedSubs] = useState([]);
   const [result, setResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const { items: recentItems, addSelection, removeSelection } =
+    useRecentSelections("recentSelections:ai-recommendation");
 
   useEffect(() => {
     getRegions().then(setRegions);
     getCategoryGroups().then(setCategoryGroups);
   }, []);
 
-  const subOptions = categoryGroups
-    .filter((group) => selectedMajors.includes(group.code))
-    .flatMap((group) => group.children);
+  const subOptions =
+    categoryGroups.find((group) => group.code === selectedMajor)?.children ?? [];
+  const allSubsSelected =
+    subOptions.length > 0 && selectedSubs.length === subOptions.length;
+  const hasEnoughSubs = selectedSubs.length >= MIN_SUB_CATEGORIES;
 
-  const toggleMajor = (code) => {
-    setSelectedMajors((prev) =>
-      prev.includes(code) ? prev.filter((item) => item !== code) : [...prev, code]
-    );
-    setSelectedSubs((prev) => {
-      const nextMajors = selectedMajors.includes(code)
-        ? selectedMajors.filter((item) => item !== code)
-        : [...selectedMajors, code];
-      const validCodes = new Set(
-        categoryGroups
-          .filter((group) => nextMajors.includes(group.code))
-          .flatMap((group) => group.children.map((child) => child.code))
-      );
-      return prev.filter((item) => validCodes.has(item));
-    });
+  const allSubOptions = categoryGroups.flatMap((group) => group.children);
+  const regionName = (code) => regions.find((r) => r.code === code)?.name ?? code;
+  const majorName = (code) =>
+    categoryGroups.find((group) => group.code === code)?.name ?? code;
+  const subNames = (codes) =>
+    codes.map((code) => allSubOptions.find((c) => c.code === code)?.name ?? code).join(", ");
+
+  const chooseMajor = (code) => {
+    setSelectedMajor(code);
+    setSelectedSubs([]);
   };
 
   const toggleSub = (code) => {
@@ -94,13 +105,27 @@ function AiRecommendation() {
     try {
       const data = await getRecommendation({
         region,
-        majorCategories: selectedMajors,
+        majorCategory: selectedMajor,
         subCategories: selectedSubs,
       });
       setResult(data);
+      addSelection({
+        label: `${regionName(region)} · ${majorName(selectedMajor)} · ${subNames(
+          selectedSubs,
+        )}`,
+        region,
+        major: selectedMajor,
+        subs: selectedSubs,
+      });
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const restoreSelection = (item) => {
+    setRegion(item.region);
+    setSelectedMajor(item.major);
+    setSelectedSubs(item.subs);
   };
 
   return (
@@ -109,6 +134,12 @@ function AiRecommendation() {
       <p className="ai-recommendation__desc">
         지역과 업종을 선택하면 AI가 맞춤형 창업 업종을 분석합니다.
       </p>
+
+      <RecentSelections
+        items={recentItems}
+        onSelect={restoreSelection}
+        onRemove={removeSelection}
+      />
 
       <Card className="ai-recommendation__filter">
         <MultiSelectDropdown
@@ -122,23 +153,28 @@ function AiRecommendation() {
         />
 
         <MultiSelectDropdown
-          label="업종 카테고리 (복수 선택)"
+          label="업종 카테고리 (단일 선택)"
           icon={<FontAwesomeIcon icon={faStore} />}
           placeholder="업종 카테고리를 선택해주세요"
           options={categoryGroups}
-          selected={selectedMajors}
-          onToggle={toggleMajor}
+          selected={selectedMajor ? [selectedMajor] : []}
+          onToggle={chooseMajor}
+          single
         />
 
         <MultiSelectDropdown
           label="하위 카테고리 (복수 선택)"
-          placeholder="하위 카테고리를 선택해주세요"
+          placeholder="3개 이상 선택 필수"
           options={subOptions}
           selected={selectedSubs}
           onToggle={toggleSub}
         />
 
-        <Button onClick={handleSearch} disabled={isSearching} className="ai-recommendation__search">
+        <Button
+          onClick={handleSearch}
+          disabled={isSearching || !region || !hasEnoughSubs}
+          className="ai-recommendation__search"
+        >
           <FontAwesomeIcon icon={faMagnifyingGlass} /> {isSearching ? "검색 중..." : "검색하기"}
         </Button>
       </Card>
@@ -175,8 +211,10 @@ function AiRecommendation() {
             <ResultPanel
               variant="info"
               icon={<FontAwesomeIcon icon={faLightbulb} />}
-              title="선택 안 했지만 참고할 업종"
+              title="참고할만 한 업종"
               items={result.reference}
+              disabled={allSubsSelected}
+              disabledMessage="하위 카테고리를 모두 선택하여 참고할만 한 업종이 없습니다."
             />
           </>
         )}

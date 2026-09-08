@@ -10,7 +10,11 @@ class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    # ondelete="CASCADE": users.id가 삭제되면 이 세션도 DB 레벨에서 함께 삭제됨
+    # (앱 코드를 거치지 않고 DB에서 직접 회원을 지워도 동작해야 하므로 DB 제약조건으로 건다)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     title = Column(String(255), default="새 상담")
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -27,7 +31,10 @@ class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False, index=True)
+    # ondelete="CASCADE": chat_sessions.id가 삭제되면 이 메시지도 DB 레벨에서 함께 삭제됨
+    session_id = Column(
+        Integer, ForeignKey("chat_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     role = Column(String(20), nullable=False)   # "user" | "assistant"
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

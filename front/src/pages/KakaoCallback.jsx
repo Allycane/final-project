@@ -31,7 +31,9 @@ function KakaoCallback() {
 					return;
 				}
 				login(user);
-				navigate("/", { replace: true });
+				const redirectTo = sessionStorage.getItem("postLoginRedirect") ?? "/";
+				sessionStorage.removeItem("postLoginRedirect");
+				navigate(redirectTo, { replace: true });
 			})
 			.catch(() => {
 				setError("카카오 로그인 중 오류가 발생했습니다. 다시 시도해주세요.");

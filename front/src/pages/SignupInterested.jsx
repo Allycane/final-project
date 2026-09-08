@@ -81,7 +81,7 @@ function SignupInterested() {
 				});
 				login(user);
 				alert(
-					"회원가입이 완료되었습니다. 마이페이지에서 전화번호를 추가로 입력해주세요.",
+					"회원가입이 완료되었습니다. \n마이페이지에서 전화번호를 추가로 입력해주세요.",
 				);
 				navigate("/mypage", { state: { promptPhone: true } });
 				return;
@@ -89,6 +89,7 @@ function SignupInterested() {
 
 			const user = await signupInterests({ ...basicInfo, ...interests });
 			login(user);
+			alert("회원가입이 완료 되었습니다.");
 			navigate("/");
 		} finally {
 			setIsSubmitting(false);

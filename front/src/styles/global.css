@@ -29,6 +29,7 @@ button {
 
 .app-main {
   min-height: 78vh;
+  padding-top: 79px;
 }
 
 .container {
@@ -160,6 +161,18 @@ button {
   color: var(--color-text-muted-2);
   pointer-events: none;
   font-size: 14px;
+}
+
+.text-field-wrap.has-right-icon .text-field,
+.text-field-wrap.has-right-icon .select-field {
+  padding-right: 40px;
+}
+
+.text-field-icon--right {
+  left: auto;
+  right: 14px;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 /* ---- Multi-select dropdown ---- */
