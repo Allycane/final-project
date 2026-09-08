@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth.js";
 // import { mockUser } from "../mocks/users.js";
 // -> 실제 데이터가 들어가도록
 import { updateMyProfile, deleteMyAccount } from "../api/userApi.js";
+import { formatPhoneNumber, toPhoneDigits } from "../utils/phone.js";
 import AddItemModal from "../components/mypage/AddItemModal.jsx";
 import Card from "../components/common/Card.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -37,7 +38,7 @@ function buildInitialState(baseUser) {
 	return {
 		form: {
 			name: baseUser.name ?? "",
-			phone: baseUser.phone ?? "",
+			phone: formatPhoneNumber(baseUser.phone ?? ""),
 			email: baseUser.email ?? "",
 			password: "",
 			passwordConfirm: "",
@@ -99,7 +100,6 @@ function Mypage() {
 
 	useEffect(() => {
 		if (location.state?.promptPhone) {
-			alert("전화번호를 입력해주세요.");
 			phoneInputRef.current?.focus();
 		}
 	}, [location.state]);
@@ -118,8 +118,8 @@ function Mypage() {
 
 	const handleFieldChange = (event) => {
 		const { name, value } = event.target;
-		// 전화번호는 하이픈(-) 없이 숫자만 입력받는다. 하이픈은 백엔드에서 붙여준다.
-		const nextValue = name === "phone" ? value.replace(/[^0-9]/g, "") : value;
+		// 프론트에서는 010-1234-5678 형식으로 입력받고, 백엔드 전송 시 숫자만 남긴다.
+		const nextValue = name === "phone" ? formatPhoneNumber(value) : value;
 		setState((prev) => ({ ...prev, form: { ...prev.form, [name]: nextValue } }));
 	};
 
@@ -146,13 +146,14 @@ function Mypage() {
 
 	const handleWithdraw = async () => {
 		const confirmed = window.confirm(
-			"정말 회원 탈퇴하시겠습니까? 탈퇴 시 모든 정보가 삭제되며 되돌릴 수 없습니다.",
+			"정말 회원 탈퇴하시겠습니까? \n탈퇴 시 모든 정보가 삭제되며 되돌릴 수 없습니다.",
 		);
 		if (!confirmed) return;
 
 		setIsWithdrawing(true);
 		try {
 			await deleteMyAccount();
+			alert("회원탈퇴가 완료되었습니다.")
 			logout();
 		} finally {
 			setIsWithdrawing(false);
@@ -170,7 +171,7 @@ function Mypage() {
 		try {
 			const updated = await updateMyProfile({
 				name: form.name,
-				phone: form.phone,
+				phone: toPhoneDigits(form.phone),
 				email: form.email,
 				password: form.password || undefined,
 				categories,
@@ -208,8 +209,8 @@ function Mypage() {
 						name="phone"
 						type="tel"
 						inputMode="numeric"
-						maxLength={11}
-						placeholder="01012345678"
+						maxLength={13}
+						placeholder="010-1234-5678"
 						value={form.phone}
 						onChange={handleFieldChange}
 					/>

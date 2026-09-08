@@ -5,14 +5,30 @@ import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { getSalesAnalysis } from "../api/analysisApi.js";
 import { mockRegions } from "../mocks/regions.js";
 import { mockCategoryGroups } from "../mocks/categories.js";
+import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import StatTile from "../components/common/StatTile.jsx";
+import RecentSelections from "../components/common/RecentSelections.jsx";
 import SalesLineChart from "../components/analysis/SalesLineChart.jsx";
 import DistributionMapSection from "../components/analysis/DistributionMapSection.jsx";
 import "../styles/AiAnalysis.css";
+
+function regionName(code) {
+  return mockRegions.find((r) => r.code === code)?.name ?? code;
+}
+
+function majorName(code) {
+  return mockCategoryGroups.find((group) => group.code === code)?.name ?? code;
+}
+
+function minorName(code) {
+  return mockCategoryGroups
+    .flatMap((group) => group.children)
+    .find((child) => child.code === code)?.name ?? code;
+}
 
 function AiAnalysis() {
   const [region, setRegion] = useState("");
@@ -22,6 +38,8 @@ function AiAnalysis() {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const { items: recentItems, addSelection, removeSelection } =
+    useRecentSelections("recentSelections:ai-analysis");
 
   const minorOptions =
     mockCategoryGroups.find((group) => group.code === majorCategory)?.children ?? [];
@@ -36,9 +54,25 @@ function AiAnalysis() {
         targetSales,
       });
       setResult(data);
+      addSelection({
+        label: `${regionName(region)} · ${majorName(majorCategory)} · ${minorName(
+          minorCategory,
+        )} · 목표 ${Number(targetSales || 0).toLocaleString()}만원`,
+        region,
+        majorCategory,
+        minorCategory,
+        targetSales,
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const restoreSelection = (item) => {
+    setRegion(item.region);
+    setMajorCategory(item.majorCategory);
+    setMinorCategory(item.minorCategory);
+    setTargetSales(item.targetSales);
   };
 
   return (
@@ -52,10 +86,16 @@ function AiAnalysis() {
         </p>
       </div>
 
+      <RecentSelections
+        items={recentItems}
+        onSelect={restoreSelection}
+        onRemove={removeSelection}
+      />
+
       <Card className="ai-analysis__condition">
         <div className="ai-analysis__condition-head">
           <h2>분석 조건 설정</h2>
-          <Link to="/ai-analysis/comparison" className="ai-analysis__compare-link">
+          <Link to="/ai-analysis/comparison" className="btn btn-outline ai-analysis__compare-link">
             지역별 분석 비교
           </Link>
         </div>

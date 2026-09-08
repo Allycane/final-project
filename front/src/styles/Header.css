@@ -1,8 +1,27 @@
 .header {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
+  width: 100%;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border);
+  transform: translateY(0);
+  transition: transform 0.25s ease;
+}
+
+.header--hidden {
+  transform: translateY(-100%);
+}
+
+.header-hover-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  z-index: 101;
 }
 
 .header__inner {

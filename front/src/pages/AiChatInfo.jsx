@@ -60,15 +60,24 @@ const CONSULTING_FEATURES = [
 function AiChatInfo() {
 	const navigate = useNavigate();
 	const { user, isLoggedIn } = useAuth();
-	const interests = user?.interests ?? mockUser.interests;
 
-	const goToInterestEdit = () => navigate(isLoggedIn ? "/mypage" : "/login");
+	// 로그인 상태일 때는 Mock 데이터를 유지하되, 아래 주석을 해제하여 실제 백엔드 API로 교체할 수 있다.
+	// import { useEffect, useState } from "react";
+	// import { getMyInterests } from "../api/userApi.js";
+	// const [interests, setInterests] = useState(mockUser.interests);
+	// useEffect(() => {
+	//   if (!isLoggedIn) return;
+	//   getMyInterests().then(setInterests);
+	// }, [isLoggedIn]);
+	const interests = isLoggedIn ? (user?.interests ?? mockUser.interests) : null;
+
+	const goToInterestEdit = () => navigate("/mypage");
 
 	// 로그인/회원가입한 사용자만 AI 상담 채팅을 이용할 수 있도록 체크
 	const handleStartChat = () => {
 		if (!isLoggedIn) {
-			alert("회원가입 또는 로그인을 한 사용자만 이용할 수 있는 서비스입니다.");
-			navigate("/login");
+			alert("로그인 후 이용 가능한 서비스 입니다.");
+			navigate("/login", { state: { from: "/ai-chat" } });
 			return;
 		}
 		navigate("/ai-chat/main");
@@ -99,34 +108,46 @@ function AiChatInfo() {
 					<div className="chat-info__interests-grid">
 						<div>
 							<p className="chat-info__interests-label">관심 업종</p>
-							<div className="chat-info__tags">
-								{interests.categories.map((name) => (
-									<Tag key={name}>{name}</Tag>
-								))}
-							</div>
-							<button
-								type="button"
-								className="chat-info__edit-link"
-								onClick={goToInterestEdit}
-							>
-								관심 업종 수정하기
-							</button>
+							{isLoggedIn ? (
+								<>
+									<div className="chat-info__tags">
+										{interests.categories.map((name) => (
+											<Tag key={name}>{name}</Tag>
+										))}
+									</div>
+									<button
+										type="button"
+										className="chat-info__edit-link"
+										onClick={goToInterestEdit}
+									>
+										관심 업종 수정하기
+									</button>
+								</>
+							) : (
+								<p className="chat-info__login-required">로그인 후 조회 가능</p>
+							)}
 						</div>
 
 						<div>
 							<p className="chat-info__interests-label">관심 지역</p>
-							<div className="chat-info__tags">
-								{interests.regions.map((name) => (
-									<Tag key={name}>{name}</Tag>
-								))}
-							</div>
-							<button
-								type="button"
-								className="chat-info__edit-link"
-								onClick={goToInterestEdit}
-							>
-								관심 지역 수정하기
-							</button>
+							{isLoggedIn ? (
+								<>
+									<div className="chat-info__tags">
+										{interests.regions.map((name) => (
+											<Tag key={name}>{name}</Tag>
+										))}
+									</div>
+									<button
+										type="button"
+										className="chat-info__edit-link"
+										onClick={goToInterestEdit}
+									>
+										관심 지역 수정하기
+									</button>
+								</>
+							) : (
+								<p className="chat-info__login-required">로그인 후 조회 가능</p>
+							)}
 						</div>
 					</div>
 				</Card>

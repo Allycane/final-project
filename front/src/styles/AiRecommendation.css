@@ -109,6 +109,16 @@
   color: var(--color-info-text);
 }
 
+.result-panel--disabled {
+  opacity: 0.6;
+}
+
+.result-panel__disabled-message {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted-2);
+}
+
 @media (max-width: 1000px) {
   .ai-recommendation__filter {
     grid-template-columns: 1fr;
