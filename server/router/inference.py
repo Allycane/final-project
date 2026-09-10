@@ -77,8 +77,16 @@ def _compute_latest_quarter_features():
     grp = df.groupby(["district_code", "service_code"], group_keys=False)
 
     df["prev_sales"] = grp["monthly_sales_amount"].shift(1)
-    df["prev_sales_data_type"] = grp["sales_data_type"].shift(1)
-    df["sales_growth_rate"] = (df["monthly_sales_amount"] - df["prev_sales"]) / df["prev_sales"]
+    df["sales_growth_rate_1q"] = (df["monthly_sales_amount"] - df["prev_sales"]) / df["prev_sales"]
+
+    # "2년(직전 8개 분기)" 추세 기반 - feature_engineering.py와 반드시 동일하게 유지
+    WINDOW_QUARTERS = 8
+    df["sales_growth_rate"] = grp["sales_growth_rate_1q"].transform(
+        lambda s: s.rolling(WINDOW_QUARTERS - 1).mean()
+    )
+    for i in range(1, WINDOW_QUARTERS):
+        df[f"prev{i}_sales_data_type"] = grp["sales_data_type"].shift(i)
+
     df["net_store_change_rate"] = (
         (df["opening_store_count"] - df["closing_store_count"])
         / df["total_store_count"].replace(0, np.nan)
@@ -96,14 +104,13 @@ def _compute_latest_quarter_features():
     latest_df = df[df["year_quarter_code"] == latest_quarter].copy()
 
     # ── 데이터 품질 필터 1: mock(추정치) 제외 ──
-    # 이번 분기 또는 전분기 매출이 추정(mock)치면 성장률 자체가 진짜 시장 신호가
-    # 아니므로 추천 후보에서 제외. (예: 강동구 컴퓨터학원 - 21개 분기 전부 mock)
+    # 2년 추세 계산에 쓰인 8개 분기 중 하나라도 mock이면 추세 자체가 진짜 시장
+    # 신호가 아니므로 추천 후보에서 제외.
     before_mock = len(latest_df)
     latest_df["exclusion_reason"] = None
-    is_mock = (
-        (latest_df["sales_data_type"] != "actual")
-        | (latest_df["prev_sales_data_type"] != "actual")
-    )
+    is_mock = latest_df["sales_data_type"] != "actual"
+    for i in range(1, WINDOW_QUARTERS):
+        is_mock = is_mock | (latest_df[f"prev{i}_sales_data_type"] != "actual")
     latest_df.loc[is_mock, "exclusion_reason"] = "데이터 부족"
 
     # ── 데이터 품질 필터 2: 실측이어도 변동성이 너무 큰 업종 제외 ──
