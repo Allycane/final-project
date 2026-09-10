@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends  # [수정] Depends 추가 (기존: "from fastapi import APIRouter")
+from sqlalchemy.orm import Session  # [수정/신규]
 
+from database.connection import get_db  # [수정/신규]
 from schemas.analysis import AnalysisRequest, AnalysisResponse, QuarterPoint
+from schemas.map import MapDistributionRequest, MapDistributionResponse  # [수정/신규]
+from services import map_service  # [수정/신규]
 
 # auth 라우터(/api/auth) 컨벤션에 맞춤.
 # axiosInstance가 baseURL(http://localhost:8000)로 FastAPI에 직접 요청하므로
@@ -10,7 +14,7 @@ router = APIRouter(prefix="/api/analysis", tags=["ai"])
 
 @router.post("", response_model=AnalysisResponse)
 def predict_sales(payload: AnalysisRequest) -> AnalysisResponse:
-   #  AI 매출 분석 엔드포인트.
+   #  AI 매출 분석 엔드포인트. (이 함수는 변경 없음)
 
    #  TODO(모델 완성 후):
    #    1. server/ml/page2/*.pkl 로드 (joblib.load)
@@ -38,3 +42,27 @@ def predict_sales(payload: AnalysisRequest) -> AnalysisResponse:
             QuarterPoint(quarter="27.1", actual=None, predicted=9100, target=payload.targetSales),
         ],
     )
+
+
+@router.post("/map", response_model=MapDistributionResponse)
+def get_map_distribution(
+    payload: MapDistributionRequest,
+    db: Session = Depends(get_db),
+) -> MapDistributionResponse:
+    result = map_service.get_distribution(
+        db=db,
+        region=payload.region,
+        major_category=payload.majorCategory,
+        sub_categories=payload.subCategories,
+        radius=payload.radius,
+        center_lat=payload.centerLat,
+        center_lng=payload.centerLng,
+        marker_limit=payload.markerLimit,  # [수정] 마커 최대 개수 전달
+    )
+
+
+    if result["center"] is None:
+        # 조건에 맞는 좌표가 하나도 없는 경우 - 빈 목록 + 서울시청 좌표를 기본값으로 반환
+        return MapDistributionResponse(center={"lat": 37.5665, "lng": 126.9780}, points=[])
+
+    return MapDistributionResponse(**result)

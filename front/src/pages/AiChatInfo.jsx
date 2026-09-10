@@ -9,7 +9,7 @@ import {
 	faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
-import { mockUser } from "../mocks/users.js";
+// import { mockUser } from "../mocks/users.js";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Tag from "../components/common/Tag.jsx";
@@ -69,7 +69,9 @@ function AiChatInfo() {
 	//   if (!isLoggedIn) return;
 	//   getMyInterests().then(setInterests);
 	// }, [isLoggedIn]);
-	const interests = isLoggedIn ? (user?.interests ?? mockUser.interests) : null;
+	// const interests = isLoggedIn ? (user?.interests ?? mockUser.interests) : null;
+	const categories = user?.categories ?? [];
+	const regions = user?.regions ?? [];
 
 	const goToInterestEdit = () => navigate("/mypage");
 
@@ -111,9 +113,13 @@ function AiChatInfo() {
 							{isLoggedIn ? (
 								<>
 									<div className="chat-info__tags">
-										{interests.categories.map((name) => (
-											<Tag key={name}>{name}</Tag>
-										))}
+										{categories.length > 0 ? (
+											categories.map((name) => <Tag key={name}>{name}</Tag>)
+										) : (
+											<p className="chat-info__login-required">
+												등록된 관심 업종이 없습니다.
+											</p>
+										)}
 									</div>
 									<button
 										type="button"
@@ -133,9 +139,13 @@ function AiChatInfo() {
 							{isLoggedIn ? (
 								<>
 									<div className="chat-info__tags">
-										{interests.regions.map((name) => (
-											<Tag key={name}>{name}</Tag>
-										))}
+										{regions.length > 0 ? (
+											regions.map((name) => <Tag key={name}>{name}</Tag>)
+										) : (
+											<p className="chat-info__login-required">
+												등록된 관심 지역이 없습니다.
+											</p>
+										)}
 									</div>
 									<button
 										type="button"
