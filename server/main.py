@@ -5,8 +5,7 @@ from database.connection import Base, engine
 from router.auth import router as auth_router
 from router.analysis import router as analysis_router
 from router.chat import router as chat_router
-from router.recent_selections import router as recent_selections
-# from router.recommend import router as recommend_router
+from router.recommend import router as recommend_router
 
 
 # from routes.auth import router as auth_router
@@ -32,8 +31,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(analysis_router)
 app.include_router(chat_router)
-app.include_router(recent_selections)
-# app.include_router(recommend_router, prefix="/api")
+app.include_router(recommend_router, prefix="/api")
 
 
 

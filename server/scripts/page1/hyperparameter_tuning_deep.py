@@ -1,7 +1,8 @@
 """
 hyperparameter_tuning_deep.py
 --------------------------------
-hyperparameter_tuning.py보다 훨씬 넓은 범위로 하이퍼파라미터를 탐색하는 심화 버전.
+Page 1 "업종 추천" 모델 - 8개 알고리즘을 RandomizedSearchCV로 폭넓게 하이퍼파라미터
+탐색해서 비교하고, 가장 성능 좋은 모델을 최종 채택하는 심화 튜닝 스크립트.
 
 기존 GridSearchCV(격자 전체 탐색) 대신 RandomizedSearchCV(넓은 범위에서 무작위 표본 추출)를
 사용한다. 이유:
@@ -11,15 +12,17 @@ hyperparameter_tuning.py보다 훨씬 넓은 범위로 하이퍼파라미터를 
     - 연속적인 범위(예: learning_rate 0.001~0.3 사이 아무 값)에서 뽑기 때문에,
       격자보다 더 미세한 값도 탐색 가능
 
-교차검증도 4-Fold -> 5-Fold로 늘려서 더 안정적인 평균을 얻는다.
+교차검증은 TimeSeriesSplit(8-Fold) 사용 - 랜덤 셔플 절대 금지 (미래 데이터 누수 방지).
 
 실행 위치: server/scripts/page1/hyperparameter_tuning_deep.py
+사전 준비: feature_engineering.py가 mock/변동성 필터링이 적용된 최신 버전이어야 함
 결과물: server/ml/page1/hyperparameter_tuning_deep_results.csv
-        server/ml/page1/recommendation_model.pkl (덮어씀 - 심화 탐색 결과가 최신)
+        server/ml/page1/recommendation_model.pkl (8개 중 최종 1등 모델로 저장)
 
-예상 소요 시간: 모델당 N_ITER(기본 500)회 x 8-Fold = 4,000회 학습.
-    8개 모델이면 총 32,000회 안팎. 시간이 매우 오래 걸릴 수 있음(수 시간~하루 이상 가능).
-    급하면 파일 아래쪽 N_ITER 값을 줄이면 비례해서 빨라짐.
+예상 소요 시간: 모델당 N_ITER(기본 500)회 x 8-Fold. 8개 모델 전부 도니 시간이
+    오래 걸릴 수 있음(컴퓨터 사양에 따라 수 시간). 중간 저장 기능이 있어서
+    Ctrl+C로 끊어도 그때까지 완료된 모델 결과는 CSV에 안전하게 남음.
+    시간이 부족하면 아래 N_ITER 값을 줄이면 비례해서 빨라짐.
 """
 
 import os
@@ -50,19 +53,19 @@ try:
     HAS_XGB = True
 except ImportError:
     HAS_XGB = False
-    print("[info] xgboost 미설치 - 비교 대상에서 제외합니다.")
+    print("[info] xgboost 미설치 - 비교 대상에서 제외합니다. 포함하려면: pip install xgboost")
 
 try:
     from lightgbm import LGBMClassifier
     HAS_LGBM = True
 except ImportError:
     HAS_LGBM = False
-    print("[info] lightgbm 미설치 - 비교 대상에서 제외합니다.")
+    print("[info] lightgbm 미설치 - 비교 대상에서 제외합니다. 포함하려면: pip install lightgbm")
 
 RESULTS_PATH = os.path.join(MODEL_DIR, "hyperparameter_tuning_deep_results.csv")
 MODEL_PATH = os.path.join(MODEL_DIR, "recommendation_model.pkl")
 
-N_CV_SPLITS = 8      # 8-Fold로 더 촘촘하고 안정적인 평균
+N_CV_SPLITS = 8      # 8-Fold로 촘촘하고 안정적인 평균
 N_ITER = 500          # 모델당 무작위로 시도할 조합 수 (늘릴수록 정교해지지만 느려짐)
 RANDOM_STATE = 42
 
@@ -74,6 +77,25 @@ RANDOM_STATE = 42
 #                    작은 값 구간이 중요한 파라미터에 적합)
 
 PARAM_DISTS = {
+    "LogisticRegression": {
+        "estimator": LogisticRegression(max_iter=2000, class_weight="balanced", random_state=RANDOM_STATE),
+        "needs_scaling": True,
+        "param_dist": {
+            "C": loguniform(1e-4, 1e3),
+            "penalty": ["l1", "l2"],
+            "solver": ["liblinear"],
+        },
+    },
+    "DecisionTree": {
+        "estimator": DecisionTreeClassifier(class_weight="balanced", random_state=RANDOM_STATE),
+        "needs_scaling": False,
+        "param_dist": {
+            "max_depth": randint(2, 20),
+            "min_samples_leaf": randint(2, 100),
+            "min_samples_split": randint(2, 50),
+            "max_features": [None, "sqrt", "log2"],
+        },
+    },
     "RandomForest": {
         "estimator": RandomForestClassifier(class_weight="balanced", random_state=RANDOM_STATE, n_jobs=-1),
         "needs_scaling": False,
@@ -222,7 +244,7 @@ def run():
         results.append(result)
         fitted_models[name] = (best_model, scaler)
 
-        # 모델 하나 끝날 때마다 즉시 중간 저장
+        # 모델 하나 끝날 때마다 즉시 중간 저장 (중간에 끊겨도 여기까지는 안전하게 남음)
         os.makedirs(MODEL_DIR, exist_ok=True)
         partial_df = pd.DataFrame(results).sort_values("test_f1", ascending=False).reset_index(drop=True)
         partial_df.to_csv(RESULTS_PATH, index=False, encoding="utf-8-sig")
