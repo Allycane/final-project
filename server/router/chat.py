@@ -4,7 +4,13 @@ from sqlalchemy.orm import Session
 from database.connection import get_db
 from models.user import User
 from models.chat import ChatSession
-from schemas.chat import ChatRequest, ChatResponse, SessionHistoryOut, MessageOut
+from schemas.chat import (
+    ChatRequest,
+    ChatResponse,
+    SessionHistoryOut,
+    MessageOut,
+    ChatSessionSummary,
+)
 from router.auth import get_current_user
 from services import chat_service
 
@@ -47,3 +53,27 @@ def get_history(
 
     messages = [MessageOut.model_validate(m) for m in session.messages]
     return SessionHistoryOut(session_id=session.id, messages=messages)
+
+
+# --- 사이드바 '채팅 내역' ---
+# 이미 매 메시지마다 즉시 저장되는 chat_sessions/chat_messages를 그대로 사이드바
+# 목록으로 사용한다 (새로고침해도 남아있고, 한 턴만 주고받아도 바로 저장됨).
+
+@router.get("/sessions", response_model=list[ChatSessionSummary])
+def list_sessions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return chat_service.list_recent_sessions(db, current_user)
+
+
+@router.delete("/sessions/{session_id}")
+def delete_session(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    deleted = chat_service.delete_session(db, current_user, session_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다.")
+    return {"deleted": True}

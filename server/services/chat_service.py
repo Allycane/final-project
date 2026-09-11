@@ -6,41 +6,20 @@ from models.district import CommercialDistrict
 from models.chat import ChatSession, ChatMessage
 from models.category import SubCategory
 from services.openai_service import generate_reply, build_context_block
+from services.ranking_service import rank_regions_for_category
+from services.format_utils import row_to_dict
+
+# 컨텍스트에 순위를 같이 넣을 관심 업종 최대 개수 (프롬프트가 너무 길어지지 않도록 제한)
+MAX_CATEGORIES_FOR_RANKING = 2
+TOP_N_REGIONS_PER_CATEGORY = 3
+
+# 사이드바 '채팅 내역'에 보여줄 최근 대화 개수
+MAX_VISIBLE_SESSIONS = 3
 
 
-def _format_quarter(year_quarter_code: int | None) -> str:
-    """20261 -> '2026년 1분기'"""
-    if not year_quarter_code:
-        return "알 수 없음"
-    year, quarter = divmod(year_quarter_code, 10)
-    return f"{year}년 {quarter}분기"
-
-
-def _format_won(amount: int | None) -> str:
-    if amount is None:
-        return "데이터 없음"
-    return f"{amount:,}원"
-
-
-def _row_to_dict(r: CommercialDistrict) -> dict:
-    return {
-        "기준분기": _format_quarter(r.year_quarter_code),
-        "자치구": r.district_name,
-        "업종": r.service_name,
-        "업종대분류": r.service_category,
-        "총 점포수": r.total_store_count,
-        "개업률(%)": r.opening_rate,
-        "개업 점포수": r.opening_store_count,
-        "폐업률(%)": r.closing_rate,
-        "폐업 점포수": r.closing_store_count,
-        "월 매출액": _format_won(r.monthly_sales_amount),
-        "남성 매출액": _format_won(r.male_sales_amount),
-        "여성 매출액": _format_won(r.female_sales_amount),
-        "데이터 유형": "실측" if r.sales_data_type == "actual" else "추정(참고용)",
-    }
-
-
-def get_or_create_session(db: Session, user_id: int, session_id: int | None) -> ChatSession:
+def get_or_create_session(
+    db: Session, user_id: int, session_id: int | None, first_message: str | None = None
+) -> ChatSession:
     if session_id:
         session = (
             db.query(ChatSession)
@@ -50,7 +29,11 @@ def get_or_create_session(db: Session, user_id: int, session_id: int | None) -> 
         if session:
             return session
 
-    session = ChatSession(user_id=user_id)
+    # 새 세션을 만드는 경우, 사이드바에 표시할 제목을 첫 메시지로 바로 채워둔다.
+    # (이전 방식처럼 "페이지 이탈 시" 제목을 따로 정하지 않고, 세션 생성 시점에 바로 확정)
+    title = (first_message or "").strip()[:24] or "새 상담"
+
+    session = ChatSession(user_id=user_id, title=title)
     db.add(session)
     db.commit()
     db.refresh(session)
@@ -172,7 +155,20 @@ def find_relevant_districts(
         if len(unique_rows) >= limit:
             break
 
-    return [_row_to_dict(r) for r in unique_rows]
+    return [row_to_dict(r) for r in unique_rows]
+
+
+def get_category_rankings_for_user(db: Session, user: User) -> list[dict]:
+    """
+    회원의 관심 업종(최대 MAX_CATEGORIES_FOR_RANKING개)에 대해 서울 전체 자치구
+    기준 창업 적합도 순위를 계산합니다. ("어디에 창업하는 게 좋을지" 같은 질문에
+    대응하기 위한 분석 데이터 - services/ranking_service.py 참고)
+    """
+    categories = (user.categories or [])[:MAX_CATEGORIES_FOR_RANKING]
+    return [
+        rank_regions_for_category(db, category, top_n=TOP_N_REGIONS_PER_CATEGORY)
+        for category in categories
+    ]
 
 
 def get_history_as_messages(session: ChatSession, limit: int = 20) -> list[dict]:
@@ -187,18 +183,48 @@ def save_message(db: Session, session_id: int, role: str, content: str):
     db.commit()
 
 
-def handle_chat(db: Session, user: User, session_id: int | None, user_message: str):
-    session = get_or_create_session(db, user.id, session_id)
-
+def _build_context_block(db: Session, user: User) -> str:
     user_profile = build_user_profile_dict(db, user)
     district_rows = find_relevant_districts(db, user)
-    context_block = build_context_block(user_profile, district_rows)
+    category_rankings = get_category_rankings_for_user(db, user)
+    return build_context_block(user_profile, district_rows, category_rankings)
 
+
+def handle_chat(db: Session, user: User, session_id: int | None, user_message: str):
+    session = get_or_create_session(db, user.id, session_id, first_message=user_message)
+
+    # 사용자 메시지는 답변 생성 전에 먼저 저장한다. 이러면 만에 하나 이후 단계(OpenAI 호출 등)에서
+    # 오류가 나거나 응답 중 새로고침을 해도, 사용자가 보낸 메시지 자체는 이미 DB에 남아있다.
+    save_message(db, session.id, "user", user_message)
+
+    context_block = _build_context_block(db, user)
     history = get_history_as_messages(session)
 
-    reply = generate_reply(history=history, user_message=user_message, context_block=context_block)
-
-    save_message(db, session.id, "user", user_message)
+    reply = generate_reply(db=db, history=history, user_message=user_message, context_block=context_block)
     save_message(db, session.id, "assistant", reply)
 
     return session.id, reply
+
+
+def list_recent_sessions(db: Session, user: User) -> list[ChatSession]:
+    """사이드바 '채팅 내역'에 보여줄 최근 대화 목록 (최대 MAX_VISIBLE_SESSIONS개)"""
+    return (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == user.id)
+        .order_by(ChatSession.created_at.desc())
+        .limit(MAX_VISIBLE_SESSIONS)
+        .all()
+    )
+
+
+def delete_session(db: Session, user: User, session_id: int) -> bool:
+    session = (
+        db.query(ChatSession)
+        .filter(ChatSession.id == session_id, ChatSession.user_id == user.id)
+        .first()
+    )
+    if not session:
+        return False
+    db.delete(session)  # models/chat.py의 cascade 설정으로 딸린 메시지도 함께 삭제됨
+    db.commit()
+    return True
