@@ -1,16 +1,11 @@
-from fastapi import APIRouter, Depends  # [수정] Depends 추가 (기존: "from fastapi import APIRouter")
-from sqlalchemy.orm import Session  # [수정/신규]
-
-from database.connection import get_db  # [수정/신규]
+from fastapi import APIRouter, Depends  # Depends 추가 (기존: "from fastapi import APIRouter")
+from sqlalchemy.orm import Session  
+from database.connection import get_db 
 from schemas.analysis import AnalysisRequest, AnalysisResponse, QuarterPoint
-from schemas.map import MapDistributionRequest, MapDistributionResponse  # [수정/신규]
-from services import map_service  # [수정/신규]
+from schemas.map import MapDistributionRequest, MapDistributionResponse  
+from services import map_service  
 
-# auth 라우터(/api/auth) 컨벤션에 맞춤.
-# axiosInstance가 baseURL(http://localhost:8000)로 FastAPI에 직접 요청하므로
-# vite.config.js의 "/predict" 프록시와는 무관함 (그 프록시는 현재 미사용 경로).
 router = APIRouter(prefix="/api/analysis", tags=["ai"])
-
 
 @router.post("", response_model=AnalysisResponse)
 def predict_sales(payload: AnalysisRequest) -> AnalysisResponse:
@@ -57,7 +52,7 @@ def get_map_distribution(
         radius=payload.radius,
         center_lat=payload.centerLat,
         center_lng=payload.centerLng,
-        marker_limit=payload.markerLimit,  # [수정] 마커 최대 개수 전달
+        marker_limit=payload.markerLimit,  
     )
 
 

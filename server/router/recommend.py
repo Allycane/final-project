@@ -19,6 +19,7 @@ from pydantic import BaseModel
 
 from database.connection import get_db
 from models.category import MajorCategory
+from models.store_type import StoreType
 from router.category_mapping import resolve_primary_codes, resolve_reference_pool
 from router.inference import build_recommendation_result
 
@@ -71,6 +72,10 @@ def get_categories(db: Session = Depends(get_db)):
         for major in majors
     ]
 
+@router.get("/store-types")
+def get_store_types(db: Session = Depends(get_db)):
+    store_types = db.query(StoreType).order_by(StoreType.id).all()
+    return [{"code": st.code, "name": st.name} for st in store_types]
 
 @router.post("/recommendation")
 def post_recommendation(req: RecommendationRequest, db: Session = Depends(get_db)):

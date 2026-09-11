@@ -60,6 +60,11 @@ def load_model_bundle():
         print(f"[inference] 모델 로드 완료: {_model_bundle.get('model_name', 'unknown')}")
     return _model_bundle
 
+def preload():
+    """서버 시작 시 호출: 모델 + 최신 분기 피처를 미리 로드/계산해서 캐시."""
+    load_model_bundle()
+    _compute_latest_quarter_features()
+
 
 def _compute_latest_quarter_features():
     """seoul_store.csv 전체를 읽어서, 학습 때와 동일한 방식으로 피처를 계산한 뒤
