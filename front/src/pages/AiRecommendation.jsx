@@ -6,6 +6,7 @@ import {
   faMagnifyingGlass,
   faChartLine,
   faLightbulb,
+  faCircleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   getRegions,
@@ -25,9 +26,15 @@ const BADGE_VARIANT = {
   참고: "info",
   공급과잉: "warn",
   쇠퇴: "bad",
+  "성장 둔화 우려": "bad",
+  "예측 데이터": "warn",
 };
 
 const MIN_SUB_CATEGORIES = 3;
+
+// 이 대분류를 선택했을 때만 "예측 데이터 부족" 안내 블록을 보여준다
+// (CS1=외식업은 실측 데이터가 충분해서 해당 사항이 거의 없음).
+const MOCK_NOTICE_MAJOR_CODES = ["CS2", "CS3"];
 
 function ResultPanel({ variant, icon, title, items, disabled, disabledMessage }) {
   return (
@@ -88,6 +95,14 @@ function AiRecommendation() {
     categoryGroups.find((group) => group.code === code)?.name ?? code;
   const subNames = (codes) =>
     codes.map((code) => allSubOptions.find((c) => c.code === code)?.name ?? code).join(", ");
+
+  // CS2(서비스업)/CS3(도소매업)을 선택했고, 선택한 업종 중 실제로 mock 데이터라서
+  // 비교 대상에서 빠진 게 있을 때만 이 목록이 채워진다. (변동성 과다로 제외된
+  // 항목은 mock이 아니므로 이 안내에는 포함하지 않는다.)
+  const mockExcludedItems =
+    MOCK_NOTICE_MAJOR_CODES.includes(selectedMajor)
+      ? (result?.noSalesData ?? []).filter((item) => item.reasonCode === "mock")
+      : [];
 
   const chooseMajor = (code) => {
     setSelectedMajor(code);
@@ -180,9 +195,12 @@ function AiRecommendation() {
       </Card>
 
       <section className="ai-recommendation__result">
-        <h2>AI 예측 및 추천 결과</h2>
+        <h2>
+          AI 예측 및 추천 결과 <Badge variant="warn">예측 데이터</Badge>
+        </h2>
         <p className="ai-recommendation__desc">
-          선택한 지역과 업종 데이터를 기반으로 분석한 결과입니다.
+          선택한 지역과 업종 데이터를 기반으로 분석한 결과이며, 실제 확정된 수치가
+          아닌 AI 모델의 예측 데이터입니다.
         </p>
 
         {!result && (
@@ -216,6 +234,19 @@ function AiRecommendation() {
               disabled={allSubsSelected}
               disabledMessage="하위 카테고리를 모두 선택하여 참고할만 한 업종이 없습니다."
             />
+
+            {mockExcludedItems.length > 0 && (
+              <ResultPanel
+                variant="info"
+                icon={<FontAwesomeIcon icon={faCircleExclamation} />}
+                title="예측 데이터 부족"
+                items={mockExcludedItems.map((item) => ({
+                  name: item.name,
+                  description: "실측 매출 데이터가 부족하여 이번 비교에서 제외되었습니다.",
+                  badge: "예측 데이터",
+                }))}
+              />
+            )}
           </>
         )}
       </section>
