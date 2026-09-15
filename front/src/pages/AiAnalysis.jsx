@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { getSalesAnalysis } from "../api/analysisApi.js";
-import { mockRegions } from "../mocks/regions.js";
-import { mockCategoryGroups } from "../mocks/categories.js";
+import { getRegions, getCategoryGroups } from "../api/recommendationApi.js";
 import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -16,23 +15,32 @@ import SalesLineChart from "../components/analysis/SalesLineChart.jsx";
 import DistributionMapSection from "../components/analysis/DistributionMapSection.jsx";
 import "../styles/AiAnalysis.css";
 
-function regionName(code) {
-	return mockRegions.find((r) => r.code === code)?.name ?? code;
-}
-
-function majorName(code) {
-	return mockCategoryGroups.find((group) => group.code === code)?.name ?? code;
-}
-
-function minorName(code) {
-	return (
-		mockCategoryGroups
-			.flatMap((group) => group.children)
-			.find((child) => child.code === code)?.name ?? code
-	);
-}
-
 function AiAnalysis() {
+	const [regions, setRegions] = useState([]);
+	const [categoryGroups, setCategoryGroups] = useState([]);
+
+	useEffect(() => {
+		getRegions()
+			.then(setRegions)
+			.catch((error) =>
+				console.error("[AiAnalysis] getRegions failed:", error),
+			);
+		getCategoryGroups()
+			.then(setCategoryGroups)
+			.catch((error) =>
+				console.error("[AiAnalysis] getCategoryGroups failed:", error),
+			);
+	}, []);
+
+	const regionName = (code) =>
+		regions.find((r) => r.code === code)?.name ?? code;
+	const majorName = (code) =>
+		categoryGroups.find((group) => group.code === code)?.name ?? code;
+	const minorName = (code) =>
+		categoryGroups
+			.flatMap((group) => group.children)
+			.find((child) => child.code === code)?.name ?? code;
+
 	const [region, setRegion] = useState("");
 	const [majorCategory, setMajorCategory] = useState("");
 	const [minorCategory, setMinorCategory] = useState("");
@@ -47,8 +55,8 @@ function AiAnalysis() {
 	} = useRecentSelections("recentSelections:ai-analysis");
 
 	const minorOptions =
-		mockCategoryGroups.find((group) => group.code === majorCategory)
-			?.children ?? [];
+		categoryGroups.find((group) => group.code === majorCategory)?.children ??
+		[];
 
 	const handleSubmit = async () => {
 		setIsLoading(true);
@@ -119,7 +127,7 @@ function AiAnalysis() {
 						label="지역 (자치구)"
 						id="region"
 						placeholder="자치구를 선택하세요"
-						options={mockRegions}
+						options={regions}
 						value={region}
 						onChange={(e) => setRegion(e.target.value)}
 					/>
@@ -127,7 +135,7 @@ function AiAnalysis() {
 						label="업종 대분류"
 						id="majorCategory"
 						placeholder="대분류를 선택하세요"
-						options={mockCategoryGroups}
+						options={categoryGroups}
 						value={majorCategory}
 						onChange={(e) => {
 							setMajorCategory(e.target.value);

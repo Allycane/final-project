@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDistribution } from "../../api/mapApi.js";
-import { mockCategoryGroups } from "../../mocks/categories.js";
+import { getCategoryGroups } from "../../api/recommendationApi.js";
 import KakaoMap from "../map/KakaoMap.jsx";
 import Select from "../common/Select.jsx";
 import Tag from "../common/Tag.jsx";
@@ -17,6 +17,19 @@ function DistributionMapSection({
 	minorCategory: initialMinorCategory,
 	targetSales,
 }) {
+	const [categoryGroups, setCategoryGroups] = useState([]);
+
+	useEffect(() => {
+		getCategoryGroups()
+			.then(setCategoryGroups)
+			.catch((error) =>
+				console.error(
+					"[DistributionMapSection] getCategoryGroups failed:",
+					error,
+				),
+			);
+	}, []);
+
 	const [mapMajorCategory, setMapMajorCategory] = useState(
 		initialMajorCategory ?? "",
 	);
@@ -30,14 +43,14 @@ function DistributionMapSection({
 
 	const subOptions = useMemo(
 		() =>
-			mockCategoryGroups.find((group) => group.code === mapMajorCategory)
+			categoryGroups.find((group) => group.code === mapMajorCategory)
 				?.children ?? [],
-		[mapMajorCategory],
+		[categoryGroups, mapMajorCategory],
 	);
 
 	const allSubOptions = useMemo(
-		() => mockCategoryGroups.flatMap((group) => group.children),
-		[],
+		() => categoryGroups.flatMap((group) => group.children),
+		[categoryGroups],
 	);
 
 	const subName = (code) =>
@@ -175,7 +188,7 @@ function DistributionMapSection({
 					<Select
 						label="업종 대분류"
 						id="distribution-majorCategory"
-						options={mockCategoryGroups}
+						options={categoryGroups}
 						value={mapMajorCategory}
 						onChange={(e) => {
 							setMapMajorCategory(e.target.value);
@@ -228,7 +241,6 @@ function DistributionMapSection({
 					<Button block onClick={handleShowDistribution} disabled={isLoading}>
 						지도에서 선택한 업종 분포 보기
 					</Button>
-					{/* [수정 끝] "현재 지도 위치에서 분포 다시 보기" 버튼 제거됨 */}
 				</div>
 			</Card>
 		</section>
