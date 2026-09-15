@@ -9,7 +9,6 @@ import {
 	faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
-// import { mockUser } from "../mocks/users.js";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
 import Tag from "../components/common/Tag.jsx";
@@ -62,17 +61,8 @@ function AiChatInfo() {
 	const { user, isLoggedIn } = useAuth();
 
 	// 로그인 상태일 때는 Mock 데이터를 유지하되, 아래 주석을 해제하여 실제 백엔드 API로 교체할 수 있다.
-	// import { useEffect, useState } from "react";
-	// import { getMyInterests } from "../api/userApi.js";
-	// const [interests, setInterests] = useState(mockUser.interests);
-	// useEffect(() => {
-	//   if (!isLoggedIn) return;
-	//   getMyInterests().then(setInterests);
-	// }, [isLoggedIn]);
-	// const interests = isLoggedIn ? (user?.interests ?? mockUser.interests) : null;
 	const categories = user?.categories ?? [];
 	const regions = user?.regions ?? [];
-
 	const goToInterestEdit = () => navigate("/mypage");
 
 	// 로그인/회원가입한 사용자만 AI 상담 채팅을 이용할 수 있도록 체크

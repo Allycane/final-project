@@ -3,8 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
-// import { mockUser } from "../mocks/users.js";
-// -> 실제 데이터가 들어가도록
 import { updateMyProfile, deleteMyAccount } from "../api/userApi.js";
 import { formatPhoneNumber, toPhoneDigits } from "../utils/phone.js";
 import AddItemModal from "../components/mypage/AddItemModal.jsx";
@@ -16,20 +14,6 @@ import "../styles/Mypage.css";
 
 const LIMITS = { category: 10, region: 5, storeType: 5 };
 
-// function buildInitialState(baseUser) {
-//   return {
-//     form: {
-//       name: baseUser.name ?? "",
-//       phone: baseUser.phone ?? "",
-//       email: baseUser.email ?? "",
-//       password: "",
-//       passwordConfirm: "",
-//     },
-//     categories: baseUser.interests?.categories ?? [],
-//     regions: baseUser.interests?.regions ?? [],
-//     storeTypes: baseUser.interests?.storeTypes ?? [],
-//   };
-// }
 function buildInitialState(baseUser) {
 	const storeTypes = Array.isArray(baseUser.store_types)
 		? baseUser.store_types
@@ -85,7 +69,6 @@ function InterestSection({
 
 function Mypage() {
 	const { user, login, logout } = useAuth();
-	//   const baseUser = user ?? mockUser;
 	const baseUser = user ?? {};
 
 	const navigate = useNavigate();
@@ -120,7 +103,10 @@ function Mypage() {
 		const { name, value } = event.target;
 		// 프론트에서는 010-1234-5678 형식으로 입력받고, 백엔드 전송 시 숫자만 남긴다.
 		const nextValue = name === "phone" ? formatPhoneNumber(value) : value;
-		setState((prev) => ({ ...prev, form: { ...prev.form, [name]: nextValue } }));
+		setState((prev) => ({
+			...prev,
+			form: { ...prev.form, [name]: nextValue },
+		}));
 	};
 
 	const removeItem = (tab, name) => {
@@ -153,7 +139,7 @@ function Mypage() {
 		setIsWithdrawing(true);
 		try {
 			await deleteMyAccount();
-			alert("회원탈퇴가 완료되었습니다.")
+			alert("회원탈퇴가 완료되었습니다.");
 			logout();
 		} finally {
 			setIsWithdrawing(false);

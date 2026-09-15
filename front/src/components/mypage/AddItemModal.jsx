@@ -9,8 +9,7 @@ import {
 	getCategoryGroups,
 	getRegions,
 	getStoreTypes,
-} from "../../api/recommendationApi.js"; // mock -> API 호출
-
+} from "../../api/recommendationApi.js";
 const TABS = [
 	{ key: "category", label: "업종 추가" },
 	{ key: "region", label: "지역 추가" },
@@ -20,8 +19,6 @@ const TABS = [
 function AddItemModal({ initialTab, selected, limits, onAdd, onClose }) {
 	const [activeTab, setActiveTab] = useState(initialTab);
 	const [searchTerm, setSearchTerm] = useState("");
-
-	// mock -> API 호출
 	const [allCategoryNames, setAllCategoryNames] = useState([]);
 	const [allRegionNames, setAllRegionNames] = useState([]);
 	const [allStoreTypeNames, setAllStoreTypeNames] = useState([]);

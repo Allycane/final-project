@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { signupInterests, kakaoSignupInterests } from "../api/authApi.js";
-import { getCategoryGroups, getRegions } from "../api/recommendationApi.js";
+import {
+	getCategoryGroups,
+	getRegions,
+	getStoreTypes,
+} from "../api/recommendationApi.js";
 import { useAuth } from "../hooks/useAuth.js";
-import { mockStoreTypes } from "../mocks/categories.js"; // ===== [수정] 매장 형태는 아직 실제 조회 API가 없어서 mock 유지 =====
 import { SIGNUP_STEPS } from "../constants/signup.js";
 import StepIndicator from "../components/common/StepIndicator.jsx";
 import CategoryToggleGroup from "../components/common/CategoryToggleGroup.jsx";
@@ -25,19 +28,24 @@ function SignupInterested() {
 	const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
 	const [categoryGroups, setCategoryGroups] = useState([]);
 	const [regions, setRegions] = useState([]);
+	const [storeTypes, setStoreTypes] = useState([]);
 	const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
 	useEffect(() => {
 		let ignore = false;
 
-		Promise.all([getCategoryGroups(), getRegions()])
-			.then(([categoriesData, regionsData]) => {
+		Promise.all([getCategoryGroups(), getRegions(), getStoreTypes()])
+			.then(([categoriesData, regionsData, storeTypesData]) => {
 				if (ignore) return;
 				setCategoryGroups(categoriesData);
 				setRegions(regionsData);
+				setStoreTypes(storeTypesData);
 			})
 			.catch((err) => {
-				console.error("카테고리/지역 목록을 불러오지 못했습니다.", err);
+				console.error(
+					"카테고리/지역/매장 형태 목록을 불러오지 못했습니다.",
+					err,
+				);
 			})
 			.finally(() => {
 				if (!ignore) setIsLoadingOptions(false);
@@ -83,7 +91,7 @@ function SignupInterested() {
 	const regionName = (code) =>
 		regions.find((r) => r.code === code)?.name ?? code;
 	const storeTypeName = (code) =>
-		mockStoreTypes.find((s) => s.code === code)?.name ?? code;
+		storeTypes.find((s) => s.code === code)?.name ?? code;
 
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
@@ -219,8 +227,13 @@ function SignupInterested() {
 						<section className="signup-interest__section">
 							<h4>3. 매장 형태</h4>
 							<p className="signup-page__desc">복수 선택 가능</p>
+							{isLoadingOptions && (
+								<p className="signup-page__desc">
+									매장 형태 목록을 불러오는 중...
+								</p>
+							)}
 							<CategoryToggleGroup
-								options={mockStoreTypes}
+								options={storeTypes}
 								selected={selectedStoreTypes}
 								onToggle={toggleStoreType}
 							/>
