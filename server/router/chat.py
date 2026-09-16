@@ -13,6 +13,9 @@ from schemas.chat import (
 )
 from router.auth import get_current_user
 from services import chat_service
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -30,9 +33,11 @@ def chat(
             session_id=req.session_id,
             user_message=req.message,
         )
-    except Exception as e:
-        # 운영환경에서는 상세 메시지를 그대로 노출하지 말고 로깅 후 일반 메시지 반환 권장
-        raise HTTPException(status_code=500, detail=f"챗봇 처리 중 오류: {e}")
+    except Exception:
+        # 상세 원인은 서버 로그에만 남기고, 클라이언트에는 내부 정보가 담기지
+        # 않은 일반 메시지만 내려준다.
+        logger.exception("챗봇 처리 중 오류 (user_id=%s, session_id=%s)", current_user.id, req.session_id)
+        raise HTTPException(status_code=500, detail="챗봇 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
 
     return ChatResponse(session_id=session_id, reply=reply)
 

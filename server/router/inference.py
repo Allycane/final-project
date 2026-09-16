@@ -33,6 +33,9 @@ from sqlalchemy import select
 
 from database.connection import engine
 from models.district import CommercialDistrict as StoreModel
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "..", "ml", "page1", "recommendation_model.pkl")
@@ -99,7 +102,7 @@ def load_model_bundle():
     global _model_bundle
     if _model_bundle is None:
         _model_bundle = joblib.load(MODEL_PATH)
-        print(f"[inference] 모델 로드 완료: {_model_bundle.get('model_name', 'unknown')}")
+        logger.info("모델 로드 완료: %s", _model_bundle.get("model_name", "unknown"))
     return _model_bundle
 
 def preload():
@@ -172,12 +175,14 @@ def _compute_latest_quarter_features():
     excluded_df = latest_df[latest_df["exclusion_reason"].notna()].copy()
     latest_df = latest_df[latest_df["exclusion_reason"].isna()].copy()
 
-    print(f"[inference] 데이터 품질 필터링: {before_mock}건 -> {len(latest_df)}건 "
-          f"(데이터 부족 {is_mock.sum()}건, 변동성 과다 {is_volatile.sum()}건 제외)")
+    logger.info(
+        "데이터 품질 필터링: %d건 -> %d건 (데이터 부족 %d건, 변동성 과다 %d건 제외)",
+        before_mock, len(latest_df), is_mock.sum(), is_volatile.sum(),
+    )
 
     _latest_features_df = latest_df
     _excluded_features_df = excluded_df
-    print(f"[inference] 최신 분기({latest_quarter}) 피처 계산 완료: {len(latest_df)}건")
+    logger.info("최신 분기(%s) 피처 계산 완료: %d건", latest_quarter, len(latest_df))
     return latest_df
 
 

@@ -20,6 +20,9 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from models.district import CommercialDistrict
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "..", "ml", "page2", "revenue_models.pkl")
@@ -35,7 +38,7 @@ def load_revenue_models():
     if _revenue_models is None:
         bundle = joblib.load(MODEL_PATH)
         _revenue_models = bundle["models"]
-        print(f"[analysis_inference] Page2 모델 {len(_revenue_models)}개 조합 로드 완료")
+        logger.info("Page2 모델 %d개 조합 로드 완료", len(_revenue_models))
     return _revenue_models
 
 
