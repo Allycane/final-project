@@ -12,6 +12,8 @@ import {
 } from "../mocks/chatMessages.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { formatChatTime } from "../utils/time.js";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import ChatBubble from "../components/chat/ChatBubble.jsx";
 import Card from "../components/common/Card.jsx";
 import Button from "../components/common/Button.jsx";
@@ -283,7 +285,7 @@ function AiChatMain() {
 							className="chat-window__send"
 							disabled={isSending}
 						>
-							⌕
+						<FontAwesomeIcon icon={faMagnifyingGlass} />
 						</Button>
 					</form>
 				</Card>
