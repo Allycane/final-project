@@ -20,6 +20,10 @@ from schemas.user import (
    KakaoSignupInterestsRequest,
 )
 from core.security import hash_password, verify_password, create_access_token, decode_access_token
+from core.logger import get_logger
+from core.retry import retry_with_backoff
+
+logger = get_logger(__name__)
 
 KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
 KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
@@ -87,33 +91,54 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
    return TokenResponse(access_token=token, user=user)
 
 
-# 카카오 로그인: 프론트에서 받은 인가 코드로 카카오 토큰/프로필을 조회한 뒤
-# 이미 가입된 회원이면 로그인 처리, 아니면 회원가입에 필요한 프로필만 내려준다.
-@router.post("/kakao", response_model=KakaoLoginResponse)
-def kakao_login(payload: KakaoLoginRequest, db: Session = Depends(get_db)):
-   token_res = requests.post(
+# 네트워크 계층(타임아웃/연결 끊김 등) 일시 오류만 재시도 대상으로 삼는다.
+# 카카오가 4xx/5xx를 정상 응답으로 내려주는 경우(잘못된 code 등)는 재시도해도
+# 의미가 없으므로, 아래 함수들은 요청 자체만 감싸고 상태코드 판정은 호출부에서 한다.
+@retry_with_backoff(retries=3, exceptions=(requests.exceptions.RequestException,))
+def _request_kakao_token(code: str):
+   return requests.post(
       "https://kauth.kakao.com/oauth/token",
       data={
          "grant_type": "authorization_code",
          "client_id": KAKAO_CLIENT_ID,
          "redirect_uri": KAKAO_REDIRECT_URI,
-         "code": payload.code,
+         "code": code,
       },
       headers={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
       timeout=5,
    )
-   if token_res.status_code != 200:
-      print("KAKAO TOKEN ERROR:", token_res.status_code, token_res.text)  # 임시 디버그, 원인 확인 후 삭제
-      raise HTTPException(status_code=400, detail="카카오 인증에 실패했습니다.")
-   kakao_access_token = token_res.json().get("access_token")
 
-   profile_res = requests.get(
+
+@retry_with_backoff(retries=3, exceptions=(requests.exceptions.RequestException,))
+def _request_kakao_profile(kakao_access_token: str):
+   return requests.get(
       "https://kapi.kakao.com/v2/user/me",
       headers={"Authorization": f"Bearer {kakao_access_token}"},
       timeout=5,
    )
+
+
+# 카카오 로그인: 프론트에서 받은 인가 코드로 카카오 토큰/프로필을 조회한 뒤
+# 이미 가입된 회원이면 로그인 처리, 아니면 회원가입에 필요한 프로필만 내려준다.
+@router.post("/kakao", response_model=KakaoLoginResponse)
+def kakao_login(payload: KakaoLoginRequest, db: Session = Depends(get_db)):
+   try:
+      token_res = _request_kakao_token(payload.code)
+   except requests.exceptions.RequestException as exc:
+      logger.error("카카오 토큰 요청 네트워크 오류: %s", exc)
+      raise HTTPException(status_code=502, detail="카카오 서버와 통신에 실패했습니다.")
+   if token_res.status_code != 200:
+      logger.error("카카오 토큰 발급 실패: status=%s body=%s", token_res.status_code, token_res.text)
+      raise HTTPException(status_code=400, detail="카카오 인증에 실패했습니다.")
+   kakao_access_token = token_res.json().get("access_token")
+
+   try:
+      profile_res = _request_kakao_profile(kakao_access_token)
+   except requests.exceptions.RequestException as exc:
+      logger.error("카카오 프로필 요청 네트워크 오류: %s", exc)
+      raise HTTPException(status_code=502, detail="카카오 서버와 통신에 실패했습니다.")
    if profile_res.status_code != 200:
-      print("KAKAO PROFILE ERROR:", profile_res.status_code, profile_res.text)  # 임시 디버그, 원인 확인 후 삭제
+      logger.error("카카오 프로필 조회 실패: status=%s body=%s", profile_res.status_code, profile_res.text)
       raise HTTPException(status_code=400, detail="카카오 사용자 정보를 가져오지 못했습니다.")
 
    profile = profile_res.json()

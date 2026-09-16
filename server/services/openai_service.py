@@ -1,9 +1,17 @@
 import json
 import os
-from openai import OpenAI
+from openai import OpenAI, APIConnectionError, APITimeoutError, RateLimitError, InternalServerError
 from sqlalchemy.orm import Session
 
 from services.chat_tools import TOOL_DEFINITIONS, execute_tool
+from core.logger import get_logger
+from core.retry import retry_with_backoff
+
+logger = get_logger(__name__)
+
+# 일시적(네트워크/서버 과부하성) 오류만 재시도한다. 인증 오류(401)나 잘못된
+# 요청(400) 같은 건 재시도해도 계속 실패하므로 대상에서 제외.
+_RETRYABLE_OPENAI_ERRORS = (APIConnectionError, APITimeoutError, RateLimitError, InternalServerError)
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 MAX_TOOL_ITERATIONS = 4  # 도구 호출이 무한 반복되지 않도록 상한선
@@ -129,6 +137,17 @@ def _build_messages(context_block: str, history: list[dict], user_message: str) 
     return messages
 
 
+@retry_with_backoff(retries=3, exceptions=_RETRYABLE_OPENAI_ERRORS)
+def _create_chat_completion(client: OpenAI, messages: list[dict]):
+    return client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=messages,
+        tools=TOOL_DEFINITIONS,
+        temperature=0.5,
+        max_tokens=1200,
+    )
+
+
 def generate_reply(db: Session, history: list[dict], user_message: str, context_block: str) -> str:
     """
     db: 도구(get_district_ranking 등)가 실제 DB를 조회할 때 사용
@@ -139,13 +158,7 @@ def generate_reply(db: Session, history: list[dict], user_message: str, context_
     client = _get_client()
 
     for _ in range(MAX_TOOL_ITERATIONS):
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=messages,
-            tools=TOOL_DEFINITIONS,
-            temperature=0.5,
-            max_tokens=1200,
-        )
+        response = _create_chat_completion(client, messages)
         message = response.choices[0].message
 
         # 모델이 도구 호출 없이 바로 답변했다면 그대로 반환
