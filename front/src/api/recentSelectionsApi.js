@@ -1,4 +1,3 @@
-// ===== 수정 시작 (recent-selections 연동, 신규/전면 수정 파일) =====
 import api from "./axiosInstance";
 
 export async function fetchRecentSelections(featureKey) {
@@ -21,4 +20,3 @@ export async function saveRecentSelection(featureKey, entry) {
 export async function deleteRecentSelection(id) {
 	await api.delete(`/api/recent-selections/${id}`);
 }
-// ===== 수정 끝 =====

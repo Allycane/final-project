@@ -74,7 +74,6 @@ function ResultColumn({ regionCode, result, regions }) {
 }
 
 function AiAnalysisComparison() {
-	// ===== 수정 시작 =====
 	const [regions, setRegions] = useState([]);
 	const [categoryGroups, setCategoryGroups] = useState([]);
 
@@ -93,7 +92,6 @@ function AiAnalysisComparison() {
 				),
 			);
 	}, []);
-	// ===== 수정 끝 =====
 
 	const [region, setRegion] = useState("");
 	const [compareRegion, setCompareRegion] = useState("");
