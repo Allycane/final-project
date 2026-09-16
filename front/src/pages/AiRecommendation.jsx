@@ -39,9 +39,8 @@ const MOCK_NOTICE_MAJOR_CODES = ["CS2", "CS3"];
 function ResultPanel({ variant, icon, title, items, disabled, disabledMessage }) {
   return (
     <Card
-      className={`result-panel result-panel--${variant} ${
-        disabled ? "result-panel--disabled" : ""
-      }`.trim()}
+      className={`result-panel result-panel--${variant} ${disabled ? "result-panel--disabled" : ""
+        }`.trim()}
     >
       <div className="result-panel__head">
         <span className="result-panel__head-icon">{icon}</span>
@@ -101,7 +100,7 @@ function AiRecommendation() {
   // 항목은 mock이 아니므로 이 안내에는 포함하지 않는다.)
   const mockExcludedItems =
     MOCK_NOTICE_MAJOR_CODES.includes(selectedMajor)
-      ? (result?.noSalesData ?? []).filter((item) => item.reasonCode === "mock")
+      ? (result?.noSalesData ?? [])
       : [];
 
   const chooseMajor = (code) => {
