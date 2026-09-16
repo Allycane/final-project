@@ -20,7 +20,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_percentage_error
 
-from feature_engineering import load_data, add_trend_and_season, get_eligible_groups, FEATURE_COLS, TARGET_COL
+from feature_engineering import load_data, filter_actual_only, add_trend_and_season, get_eligible_groups, FEATURE_COLS, TARGET_COL
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "..", "..", "ml", "page2")
@@ -29,6 +29,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "revenue_models.pkl")
 
 def train():
     df = load_data()
+    df = filter_actual_only(df)
     df = add_trend_and_season(df)
     df = get_eligible_groups(df)
 

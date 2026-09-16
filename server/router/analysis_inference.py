@@ -54,12 +54,18 @@ def format_manwon(amount_in_won: float) -> str:
 def get_history(db: Session, district_code: str, service_code: str):
     """DB(store 테이블)에서 해당 지역+업종의 전체 분기 이력을 시간순으로 조회.
     CommercialDistrict ORM 모델을 통해 조회하므로, load_data.py로 적재된
-    실데이터를 CSV 없이 바로 DB에서 가져온다."""
+    실데이터를 CSV 없이 바로 DB에서 가져온다.
+
+    mock(추정치) 분기는 제외한다 - train_model.py도 동일하게 actual 데이터만
+    학습에 썼으므로, 화면에 "실측"이라고 보여주는 데이터도 진짜 실측이어야
+    앞뒤가 맞는다. (그렇지 않으면 100% mock인 조합이 마치 실제 매출이 있는
+    것처럼 차트에 나오는 문제가 생김 - 실제로 예술품 카테고리에서 발견됨)"""
     rows = (
         db.query(CommercialDistrict)
         .filter(
             CommercialDistrict.district_code == str(district_code),
             CommercialDistrict.service_code == service_code,
+            CommercialDistrict.sales_data_type == "actual",
         )
         .order_by(CommercialDistrict.year_quarter_code)
         .all()

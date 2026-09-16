@@ -30,8 +30,18 @@ def load_data() -> pd.DataFrame:
     df = pd.read_csv(
         DATA_PATH, encoding="utf-8-sig", low_memory=False,
         usecols=["district_code", "service_code", "service_name",
-                 "year_quarter_code", "monthly_sales_amount"],
+                 "year_quarter_code", "monthly_sales_amount", "sales_data_type"],
     )
+    return df
+
+
+def filter_actual_only(df: pd.DataFrame) -> pd.DataFrame:
+    """mock(추정치) 분기는 진짜 시장 신호가 아니므로 학습에서 아예 제외한다.
+    (Page 1과 동일한 원칙 - 전체 데이터의 약 38%가 mock임을 확인함. 필터링 후
+    trend는 '실측 분기들 안에서 몇 번째인지'를 나타내게 됨)"""
+    before = len(df)
+    df = df[df["sales_data_type"] == "actual"].copy()
+    print(f"[quality_filter] {before}건 -> {len(df)}건 (mock 제외)")
     return df
 
 
@@ -78,6 +88,7 @@ def prepare_all_series():
     """전체 파이프라인 실행 후, 백테스트에 쓸 (district_code, service_code, train, test)
     목록을 전부 반환."""
     df = load_data()
+    df = filter_actual_only(df)
     df = add_trend_and_season(df)
     df = get_eligible_groups(df)
     return list(iter_series(df))
