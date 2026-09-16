@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
-import { getSalesAnalysis } from "../api/analysisApi.js";
-import { getRegions, getCategoryGroups } from "../api/recommendationApi.js";
+import { getSalesAnalysis, getActualCategoryGroups } from "../api/analysisApi.js";
+import { getRegions } from "../api/recommendationApi.js";
 import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -83,11 +83,11 @@ function AiAnalysisComparison() {
 			.catch((error) =>
 				console.error("[AiAnalysisComparison] getRegions failed:", error),
 			);
-		getCategoryGroups()
+		getActualCategoryGroups()
 			.then(setCategoryGroups)
 			.catch((error) =>
 				console.error(
-					"[AiAnalysisComparison] getCategoryGroups failed:",
+					"[AiAnalysisComparison] getActualCategoryGroups failed:",
 					error,
 				),
 			);
@@ -187,7 +187,7 @@ function AiAnalysisComparison() {
 						label="지역 (자치구)"
 						id="region"
 						placeholder="자치구를 선택하세요"
-						options={regions}
+						options={regions.filter((r) => r.code !== compareRegion)}
 						value={region}
 						onChange={(e) => setRegion(e.target.value)}
 					/>
@@ -195,7 +195,7 @@ function AiAnalysisComparison() {
 						label="비교 지역 (자치구)"
 						id="compareRegion"
 						placeholder="자치구를 선택하세요"
-						options={regions}
+						options={regions.filter((r) => r.code !== region)}
 						value={compareRegion}
 						onChange={(e) => setCompareRegion(e.target.value)}
 					/>
@@ -241,6 +241,9 @@ function AiAnalysisComparison() {
 				>
 					{isLoading ? "분석 중..." : "AI 매출 분석 시작하기 →"}
 				</Button>
+				<p className="ai-analysis__notice">
+					※실측 데이터가 존재하지 않는 업종은 제외되었습니다.
+				</p>
 			</Card>
 
 			<section className="ai-analysis__result">
