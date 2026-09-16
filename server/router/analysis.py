@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.connection import get_db
+from models.category import MajorCategory
+from models.district import CommercialDistrict
 from schemas.analysis import AnalysisRequest, AnalysisResponse, QuarterPoint
 from schemas.map import MapDistributionRequest, MapDistributionResponse
 from services import map_service
@@ -19,6 +21,33 @@ def _resolve_district_code(region: str) -> str:
     if region.isdigit():
         return region
     return _NAME_TO_CODE.get(region, region)
+
+
+@router.get("/categories")
+def get_actual_categories(db: Session = Depends(get_db)):
+    """AI 매출 분석 전용 업종 목록 - store 테이블에 sales_data_type="actual"인
+    행이 하나라도 있는 업종(소분류)만 남긴다. (recommend.py의 /api/categories는
+    Page1 추천에서 계속 전체 업종을 써야 하므로 건드리지 않고 별도 엔드포인트로 분리)"""
+    actual_service_codes = {
+        row[0]
+        for row in db.query(CommercialDistrict.service_code)
+        .filter(CommercialDistrict.sales_data_type == "actual")
+        .distinct()
+        .all()
+    }
+
+    majors = db.query(MajorCategory).order_by(MajorCategory.id).all()
+    result = []
+    for major in majors:
+        children = [
+            {"code": sub.code, "name": sub.name}
+            for sub in major.sub_categories
+            if sub.code in actual_service_codes
+        ]
+        if children:
+            result.append({"code": major.code, "name": major.name, "children": children})
+
+    return result
 
 
 @router.post("", response_model=AnalysisResponse)

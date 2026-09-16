@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
-import { getSalesAnalysis } from "../api/analysisApi.js";
-import { getRegions, getCategoryGroups } from "../api/recommendationApi.js";
+import { getSalesAnalysis, getActualCategoryGroups } from "../api/analysisApi.js";
+import { getRegions } from "../api/recommendationApi.js";
 import { useRecentSelections } from "../hooks/useRecentSelections.js";
 import Select from "../components/common/Select.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -25,10 +25,10 @@ function AiAnalysis() {
 			.catch((error) =>
 				console.error("[AiAnalysis] getRegions failed:", error),
 			);
-		getCategoryGroups()
+		getActualCategoryGroups()
 			.then(setCategoryGroups)
 			.catch((error) =>
-				console.error("[AiAnalysis] getCategoryGroups failed:", error),
+				console.error("[AiAnalysis] getActualCategoryGroups failed:", error),
 			);
 	}, []);
 
@@ -167,6 +167,9 @@ function AiAnalysis() {
 				<Button block onClick={handleSubmit} disabled={isLoading}>
 					{isLoading ? "분석 중..." : "AI 매출 분석 시작하기 →"}
 				</Button>
+				<p className="ai-analysis__notice">
+					※실측 데이터가 존재하지 않는 업종은 제외되었습니다.
+				</p>
 			</Card>
 
 			<section className="ai-analysis__result">

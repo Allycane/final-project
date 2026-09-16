@@ -36,6 +36,12 @@
   white-space: nowrap;
 }
 
+.ai-analysis__notice {
+  margin: 12px 0 0;
+  color: var(--color-danger-text);
+  font-size: 13px;
+}
+
 .ai-analysis__compare-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
