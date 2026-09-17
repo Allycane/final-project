@@ -47,9 +47,9 @@ VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/kakao/callback
 
 ```env
 # DB 정보
-DB_USER=본인이_준비한_MySQL_계정
-DB_PASSWORD=본인이_준비한_MySQL_비밀번호
-DB_HOST=본인이_준비한_MySQL_주소
+DB_USER=사용자가_준비한_MySQL_계정
+DB_PASSWORD=사용자가_준비한_MySQL_비밀번호
+DB_HOST=사용자가_준비한_MySQL_주소
 DB_PORT=3306
 DB_NAME=fp_db
 
@@ -78,9 +78,10 @@ OPENAI_MODEL=gpt-4o-mini
 ### 2-3. 원본 데이터 파일 준비
 
 `server/data/` 폴더는 용량 문제로 git에 포함되어 있지 않습니다. 아래 2개 CSV 파일을 직접 준비해서 `server/data/` 폴더 안에 넣어야 합니다.
-s
-| 파일명 | 내용 |
-| `location.csv` | 자치구/업종별 위경도 좌표 데이터 (지도 기능용) |
+
+| 파일명            | 내용                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `location.csv`    | 자치구/업종별 위경도 좌표 데이터 (지도 기능용)           |
 | `seoul_store.csv` | 서울시 상권 분기별 매출/점포수 데이터 (추천·예측 모델용) |
 
 서울시 상권분석 서비스(우리마을가게 상권분석 서비스) 등 서울시 공공데이터를 가공해서 사용한 데이터입니다. 원본 데이터 파일이 없으면 이후 단계(DB 적재, 모델 학습)가 진행되지 않습니다.
@@ -109,6 +110,23 @@ exit
 ```
 
 몇 분 정도 걸립니다. (Page 1의 업종 추천 모델은 `server/ml/page1/recommendation_model.pkl`로 이미 git에 포함되어 있어 별도 작업이 필요 없습니다.)
+
+### 2-6. (선택) 로컬 개발 환경 — 에디터 자동완성용
+
+앱 실행 자체엔 필요 없습니다 (Docker 컨테이너 안에 이미 다 설치되어 있습니다). 다만 VS Code 등에서 코드를 열어볼 때 `pandas`, `sklearn` 같은 패키지의 자동완성·타입 힌트를 쓰고 싶다면 로컬에도 가상환경을 만들어 설치해두면 편합니다.
+
+```bash
+cd server
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
 
 ---
 
@@ -144,7 +162,7 @@ docker compose down
 **컨테이너 상태 확인**
 
 ```bash
-docker ps
+docker compose ps
 ```
 
 `STATUS`가 `Up`이 아니라 `Restarting`이면 백엔드가 시작하다 에러로 죽고 있는 것입니다.
@@ -152,6 +170,8 @@ docker ps
 **에러 로그 확인**
 
 ```bash
+docker compose logs --tail=50
+docker compose logs frontend
 docker compose logs backend
 ```
 
