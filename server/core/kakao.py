@@ -7,7 +7,7 @@ KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
 
 
 def get_kakao_access_token(code: str) -> str:
-    """프론트에서 받은 인가 코드(code)를 카카오 access_token으로 교환"""
+   #  프론트에서 받은 인가 코드(code)를 카카오 access_token으로 교환
     response = requests.post(
         "https://kauth.kakao.com/oauth/token",
         data={
@@ -25,7 +25,7 @@ def get_kakao_access_token(code: str) -> str:
 
 
 def get_kakao_user_info(kakao_access_token: str) -> dict:
-    """카카오 access_token으로 사용자 정보(고유 ID, 이메일, 닉네임) 조회"""
+   #  카카오 access_token으로 사용자 정보(고유 ID, 이메일, 닉네임) 조회
     response = requests.get(
         "https://kapi.kakao.com/v2/user/me",
         headers={"Authorization": f"Bearer {kakao_access_token}"},
