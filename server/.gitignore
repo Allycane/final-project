@@ -1,5 +1,4 @@
 data/
-ml/page2/
 .venv
 .venv/__pycache__
 /__pycache__
@@ -8,3 +7,4 @@ __pycache__/
 .DS_Store
 .vscode
 prompt.md
+ml/page2/revenue_models.pkl
